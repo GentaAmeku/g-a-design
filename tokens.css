@@ -1,0 +1,71 @@
+/*
+ * G.A Design — tokens
+ *
+ * 見た目の値はすべてここにある。差し替えるのはこのファイルだけで、
+ * document.css は触らない。顧客ごとの skin は profiles/ に置く。
+ *
+ * 明暗差はすべて実測値。canvas に塗って sRGB に直し、WCAG の式で比べたもの。
+ * getComputedStyle の文字列を数値として読むと嘘の値が出るので、そこから読まない。
+ */
+
+:root {
+  /* 地。純白を起点にする。 */
+  --gad-paper: #ffffff;
+  --gad-inset: #f6f6f6; /* 要約とコードの沈んだ地 */
+
+  /* 墨は濃い順に4段。薄く見せたいときは opacity ではなくこの段を下げる。 */
+  --gad-ink: #0a0a0a; /* 白地に 19.80 / 沈んだ地に 18.32 */
+  --gad-ink-muted: #5c5c5c; /*  6.69 /  6.19 */
+  --gad-ink-quiet: #6e6e6e; /*  5.10 /  4.72 — 文字はここまで */
+  --gad-mark: #8a8a8a; /*  3.45 — 意味を持つ線と印 */
+
+  /* 飾りの罫。意味を持たせない。 */
+  --gad-hairline: #e6e6e6;
+  --gad-hairline-soft: #f0f0f0;
+
+  /* 有彩色は2つだけ。sign は署名の飾り、alert は危険。 */
+  --gad-sign: #f7e017; /* 題名の下に1本だけ引く。白地に 1.34 なので飾り専用 */
+  --gad-alert: #e05a81; /* 地に 3.53、上に載せる墨で 5.61。必ず塗って言葉を添える */
+
+  /* 書体。和文を先に置く。欧文は各書体が持つものをそのまま使う。 */
+  --gad-font-body: "Zen Kaku Gothic New", "Hiragino Kaku Gothic ProN", system-ui, sans-serif;
+  --gad-font-head: "BIZ UDPMincho", "Hiragino Mincho ProN", serif;
+  --gad-font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /*
+   * 本文 18px。Zen Kaku Gothic New は漢字の実寸が 83.6(100px 指定に対して)で
+   * 候補のなかで最も小さいため、17px 相当に見えるぶんを上げてある。
+   */
+  --gad-size-title: 34px;
+  --gad-size-h2: 22px;
+  --gad-size-h3: 17px;
+  --gad-size-body: 18px;
+  --gad-size-small: 15px;
+  --gad-size-fine: 14px;
+  --gad-size-label: 12px;
+
+  --gad-weight-body: 400;
+  --gad-weight-strong: 500; /* 本文の書体は 500 を持つ。太字まで飛ばさずに段を作れる */
+  --gad-weight-head: 700; /* 見出しの書体は 400 と 700 だけ。600 は 700 に解決される */
+
+  --gad-leading: 1.95;
+  --gad-leading-head: 1.5;
+  --gad-tracking: 0.03em;
+  --gad-tracking-head: 0.05em;
+  --gad-tracking-label: 0.16em;
+
+  /* 余白。文字を敷き詰めない。 */
+  --gad-gap-section: 44px;
+  --gad-gap-block: 22px;
+  --gad-gap-line: 14px;
+  --gad-pad-page: 64px 72px 72px;
+  --gad-pad-box: 22px 26px;
+
+  /* 行長は全角34〜36字。これ以上伸ばすと目が戻れなくなる。 */
+  --gad-measure: 640px;
+  --gad-aside: 228px;
+
+  --gad-radius: 6px;
+
+  /* 影は持たない。奥行きは地の明るさの差と髪の毛線で出す。 */
+}

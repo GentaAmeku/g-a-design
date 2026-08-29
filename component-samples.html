@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>G.A Design — 部品</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@400;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./tokens.css">
+<link rel="stylesheet" href="./document.css">
+</head>
+<body>
+<div class="gad-page">
+
+  <div class="gad-signature">
+    <span>G.A DESIGN</span>
+    <span>部品 &nbsp;/&nbsp; 12種</span>
+  </div>
+
+  <div class="gad-head">
+    <h1>部品</h1>
+    <div class="gad-rule"></div>
+    <p class="gad-lede">組む前にここを開く。12種のほかに部品を足さず、足りないときは表か散文に落とす。</p>
+  </div>
+
+  <div class="gad-summary">
+    <div class="gad-label">要約</div>
+    <p>署名行・要約・目次・用語表・引用・コード・表・図の枠・決定・未決・注記・並置。値は <code>tokens.css</code> からしか引かない。</p>
+  </div>
+
+  <div class="gad-cols">
+    <div class="gad-main">
+
+      <section>
+        <h2>決定と未決</h2>
+        <ol class="gad-decided">
+          <li>1項目に1行の理由を添える。<span class="gad-why">理由がない決定は、読者が後から覆せない。</span></li>
+          <li>決定・仮説・未決を同じ節に混ぜない。<span class="gad-why">行ごとに出どころを判断させるのが、設計書の認知負荷そのもの。</span></li>
+        </ol>
+        <div class="gad-open">
+          <p>未決はここへ。誰がいつ決めるかを添える。</p>
+          <p>空でも節ごと残す。中身のない節は消す規則の、意図した例外。</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>注記</h2>
+        <div class="gad-note"><strong>補足</strong> — 読み飛ばしても本筋が通るもの。地の差だけで区切る。</div>
+        <div class="gad-alert"><strong>注意</strong> — 危ないほうにだけ色を使う。塗りつぶして暗い墨を載せ、言葉を必ず添える。</div>
+      </section>
+
+      <section>
+        <h2>表</h2>
+        <table class="gad-table">
+          <tr><th>役割</th><th>token</th><th>白地に対して</th></tr>
+          <tr><td class="gad-rowlabel">本文の墨</td><td><code>--gad-ink</code></td><td class="gad-num">19.80</td></tr>
+          <tr><td class="gad-rowlabel">ラベル</td><td><code>--gad-ink-muted</code></td><td class="gad-num">6.69</td></tr>
+          <tr><td class="gad-rowlabel">薄い文字</td><td><code>--gad-ink-quiet</code></td><td class="gad-num">5.10</td></tr>
+          <tr><td class="gad-rowlabel">線と印</td><td><code>--gad-mark</code></td><td class="gad-num">3.45</td></tr>
+        </table>
+      </section>
+
+      <section>
+        <h2>引用</h2>
+        <div class="gad-quote">
+          <p>読みやすさは文書・文の連なり・文の三つの尺度で決まる。</p>
+          <p class="gad-quote-source">writing-for-humans / SKILL.md</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>コード</h2>
+        <pre class="gad-code"><code>:root {
+  --gad-ink:   #0a0a0a;
+  --gad-sign:  #f7e017;
+}</code></pre>
+      </section>
+
+      <section>
+        <h2>図の枠</h2>
+        <figure class="gad-figure">
+          <div class="gad-figure-frame">
+            <svg width="280" height="72" viewBox="0 0 280 72" aria-hidden="true">
+              <rect x="1" y="16" width="96" height="40" rx="6" fill="none" stroke="#0a0a0a" stroke-width="1"/>
+              <rect x="183" y="16" width="96" height="40" rx="6" fill="none" stroke="#0a0a0a" stroke-width="1"/>
+              <line x1="97" y1="36" x2="177" y2="36" stroke="#8a8a8a" stroke-width="1"/>
+              <path d="M177 36 l-8 -4 v8 z" fill="#8a8a8a"/>
+              <text x="49" y="41" text-anchor="middle" font-family="system-ui" font-size="13" fill="#0a0a0a">tokens</text>
+              <text x="231" y="41" text-anchor="middle" font-family="system-ui" font-size="13" fill="#0a0a0a">document</text>
+            </svg>
+          </div>
+          <figcaption>図1 &nbsp;枠とキャプションがこの部品の仕事。図は墨だけのインライン SVG で描き、色で意味を分けない。</figcaption>
+        </figure>
+      </section>
+
+      <section>
+        <h2>並置</h2>
+        <div class="gad-columns">
+          <div class="gad-card">
+            <div class="gad-card-title">2つまで</div>
+            <p>比べるものが2つか3つのときに使う。</p>
+          </div>
+          <div class="gad-card">
+            <div class="gad-card-title">4つ以上</div>
+            <p>表に落とす。並置は横に伸びるほど読めなくなる。</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <aside class="gad-aside">
+      <span class="gad-label">目次</span>
+      <div class="gad-toc">決定と未決<br>注記<br>表<br>引用<br>コード<br>図の枠<br>並置</div>
+
+      <span class="gad-label">用語</span>
+      <dl class="gad-glossary">
+        <dt>token</dt>
+        <dd>色や余白の値に名前を付けたもの。差し替えると見た目だけが変わる。</dd>
+        <dt>skin</dt>
+        <dd>token を丸ごと入れ替えた一式。顧客ごとに持てる。</dd>
+      </dl>
+    </aside>
+  </div>
+
+  <div class="gad-foot">
+    <span>G.A DESIGN</span>
+    <span>部品</span>
+  </div>
+
+</div>
+</body>
+</html>
