@@ -51,7 +51,7 @@ Google Fonts で日本語を持つ family は 68。Display・手書き・単一�
 
 **BIZ UDPMincho に 600 は無い。**400 と 700 だけなので、`font-weight: 600` はブラウザ側で 700 に解決される。CSS には 700 と書く。中間の段が欲しいときは、本文側の Zen Kaku Gothic New が持つ 500 を使う。
 
-出典は Google Fonts の family メタデータ(`https://fonts.google.com/metadata/fonts`)と、Chrome 上の `canvas.measureText` による自測(2026-08-29)。母集団7つ全部のインク高と描画幅は、手元の `~/.agents/docs/ga-design-typeface-research.md` に残してある。
+出典は Google Fonts の family メタデータ(<https://fonts.google.com/metadata/fonts>)と、Chrome 上の `canvas.measureText` による自測(2026-08-29)。母集団の全一覧、描画幅、選ばなかった書体の評価は [research/typeface.md](research/typeface.md) にある。
 
 ## 大きさと余白
 
@@ -84,7 +84,7 @@ Google Fonts で日本語を持つ family は 68。Display・手書き・単一�
 | 引用 | `.gad-quote` | 原文と訳文は同じ大きさで並べる |
 | コード | `pre.gad-code` | 色は付けない |
 | 表 | `.gad-table` | 短い対応関係。3列まで |
-| 図の枠 | `.gad-figure` | 枠とキャプション。図そのものは描かない |
+| 図の枠 | `.gad-figure` | 枠とキャプション。中身は下の3つで描く |
 | 決定 | `ol.gad-decided` | 1項目に1行の理由を添える |
 | 未決 | `.gad-open` | 空でも節を残す |
 | 注記 | `.gad-note` / `.gad-alert` | 補足は無彩色、注意だけ塗る |
@@ -92,7 +92,19 @@ Google Fonts で日本語を持つ family は 68。Display・手書き・単一�
 
 紙面の枠(署名行のラベル、目次の見出し)は英語でよい。中身の文は日本語のまま出す。
 
-図は墨だけのインライン SVG で描く。線は `--gad-ink`、補助線と矢印は `--gad-mark`。塗り分けをせず、位置と形で意味を出す。ノードが増えるときは縦に伸ばし、矢印を交差させない。絵文字と矢印文字を図記号の代わりにしない。飾りには `aria-hidden` を付ける。
+図は墨だけのインライン SVG で描く。塗り分けをせず、位置と形で意味を出す。ノードが増えるときは縦に伸ばし、矢印を交差させない。絵文字と矢印文字を図記号の代わりにしない。
+
+**SVG に色を直接書かない。**`stroke="#0a0a0a"` のような presentation attribute を使うと、そこだけ token の外に出る。`.gad-figure-frame` の中では次の3つを使う。
+
+| class | 何を描くか | 引く色 |
+|---|---|---|
+| `.gad-node` | 箱、丸、意味を持つ線 | `--gad-ink` |
+| `.gad-link` | 補助線、つなぎの線 | `--gad-mark` |
+| `.gad-arrow` | 矢印の頭のような塗る印 | `--gad-mark` |
+
+`<text>` は指定しなくても `--gad-ink` と本文の書体になる。
+
+図が意味を持つなら `aria-hidden` を付けず、`figcaption` にその関係を文で書く。付けてよいのは、本文を読めば分かることの飾りだけ。
 
 ## skin の差し替え
 
@@ -115,3 +127,4 @@ document.css は skin を問わず共通で、色も寸法も持たない。skin
 - 墨4段か有彩色2つを触ったら、上の表の明暗差を測り直し、同じコミットで書き換える
 - 値がこの文書と tokens.css で食い違ったら、tokens.css が正しい。成果物が読むのはそちらなので、この文書のほうを直す
 - 根拠が書かれていない値を見つけたら、それはこの文書の欠落。測った数字か、決めた日と決めた人を足す
+- 直したら `./check.sh` を回す。この文書の主張(墨の表の明暗差、有彩色2つ、しきい値、部品12種、値が token の外に出ていないこと)を機械で確かめて、崩れていれば 1 で終わる

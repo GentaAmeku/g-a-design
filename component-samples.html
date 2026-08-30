@@ -32,7 +32,7 @@
   <div class="gad-cols">
     <div class="gad-main">
 
-      <section>
+      <section id="decided">
         <h2>決定と未決</h2>
         <ol class="gad-decided">
           <li>1項目に1行の理由を添える。<span class="gad-why">理由がない決定は、読者が後から覆せない。</span></li>
@@ -44,24 +44,28 @@
         </div>
       </section>
 
-      <section>
+      <section id="note">
         <h2>注記</h2>
         <div class="gad-note"><strong>補足</strong> — 読み飛ばしても本筋が通るもの。地の差だけで区切る。</div>
         <div class="gad-alert"><strong>注意</strong> — 危ないほうにだけ色を使う。塗りつぶして暗い墨を載せ、言葉を必ず添える。</div>
       </section>
 
-      <section>
+      <section id="table">
         <h2>表</h2>
         <table class="gad-table">
+          <thead>
           <tr><th>役割</th><th>token</th><th>白地に対して</th></tr>
+          </thead>
+          <tbody>
           <tr><td class="gad-rowlabel">本文の墨</td><td><code>--gad-ink</code></td><td class="gad-num">19.80</td></tr>
           <tr><td class="gad-rowlabel">ラベル</td><td><code>--gad-ink-muted</code></td><td class="gad-num">6.69</td></tr>
           <tr><td class="gad-rowlabel">薄い文字</td><td><code>--gad-ink-quiet</code></td><td class="gad-num">5.10</td></tr>
           <tr><td class="gad-rowlabel">線と印</td><td><code>--gad-mark</code></td><td class="gad-num">3.45</td></tr>
+          </tbody>
         </table>
       </section>
 
-      <section>
+      <section id="quote">
         <h2>引用</h2>
         <div class="gad-quote">
           <p>読みやすさは文書・文の連なり・文の三つの尺度で決まる。</p>
@@ -69,7 +73,7 @@
         </div>
       </section>
 
-      <section>
+      <section id="code">
         <h2>コード</h2>
         <pre class="gad-code"><code>:root {
   --gad-ink:   #0a0a0a;
@@ -77,24 +81,25 @@
 }</code></pre>
       </section>
 
-      <section>
+      <section id="figure">
         <h2>図の枠</h2>
         <figure class="gad-figure">
           <div class="gad-figure-frame">
-            <svg width="280" height="72" viewBox="0 0 280 72" aria-hidden="true">
-              <rect x="1" y="16" width="96" height="40" rx="6" fill="none" stroke="#0a0a0a" stroke-width="1"/>
-              <rect x="183" y="16" width="96" height="40" rx="6" fill="none" stroke="#0a0a0a" stroke-width="1"/>
-              <line x1="97" y1="36" x2="177" y2="36" stroke="#8a8a8a" stroke-width="1"/>
-              <path d="M177 36 l-8 -4 v8 z" fill="#8a8a8a"/>
-              <text x="49" y="41" text-anchor="middle" font-family="system-ui" font-size="13" fill="#0a0a0a">tokens</text>
-              <text x="231" y="41" text-anchor="middle" font-family="system-ui" font-size="13" fill="#0a0a0a">document</text>
+            <svg width="280" height="72" viewBox="0 0 280 72" role="img"
+                 aria-label="tokens.css から document.css へ矢印が1本伸びている図">
+              <rect class="gad-node" x="1" y="16" width="96" height="40" rx="6"/>
+              <rect class="gad-node" x="183" y="16" width="96" height="40" rx="6"/>
+              <line class="gad-link" x1="97" y1="36" x2="177" y2="36"/>
+              <path class="gad-arrow" d="M177 36 l-8 -4 v8 z"/>
+              <text x="49" y="41" text-anchor="middle">tokens</text>
+              <text x="231" y="41" text-anchor="middle">document</text>
             </svg>
           </div>
-          <figcaption>図1 &nbsp;枠とキャプションがこの部品の仕事。図は墨だけのインライン SVG で描き、色で意味を分けない。</figcaption>
+          <figcaption>図1 &nbsp;値は <code>tokens.css</code> にだけあり、<code>document.css</code> は そこから引く。線は <code>.gad-node</code>、矢印は <code>.gad-link</code> と <code>.gad-arrow</code> で、SVG に色を直接書いていない。</figcaption>
         </figure>
       </section>
 
-      <section>
+      <section id="columns">
         <h2>並置</h2>
         <div class="gad-columns">
           <div class="gad-card">
@@ -106,13 +111,27 @@
             <p>表に落とす。並置は横に伸びるほど読めなくなる。</p>
           </div>
         </div>
+        <div class="gad-columns gad-columns-3">
+          <div class="gad-card">
+            <div class="gad-card-title">3つ</div>
+            <p><code>.gad-columns-3</code> を足すと3列になる。</p>
+          </div>
+          <div class="gad-card">
+            <div class="gad-card-title">幅</div>
+            <p>1枚あたりが狭くなるので、入るのは2〜3行まで。</p>
+          </div>
+          <div class="gad-card">
+            <div class="gad-card-title">紙</div>
+            <p>印刷では枠の途中で改ページさせない。</p>
+          </div>
+        </div>
       </section>
 
     </div>
 
     <aside class="gad-aside">
       <span class="gad-label">目次</span>
-      <div class="gad-toc">決定と未決<br>注記<br>表<br>引用<br>コード<br>図の枠<br>並置</div>
+      <div class="gad-toc"><a href="#decided">決定と未決</a><br><a href="#note">注記</a><br><a href="#table">表</a><br><a href="#quote">引用</a><br><a href="#code">コード</a><br><a href="#figure">図の枠</a><br><a href="#columns">並置</a></div>
 
       <span class="gad-label">用語</span>
       <dl class="gad-glossary">

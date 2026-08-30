@@ -301,6 +301,40 @@ table.gad-table {
   color: var(--gad-ink-quiet);
 }
 
+/*
+ * 図の中身を描く語彙。SVG に色を直接書かせないために置いてある。
+ * presentation attribute（stroke="#000" など）を使うと、そこだけ token の外に出る。
+ */
+
+.gad-figure-frame svg {
+  font-family: var(--gad-font-body);
+  font-size: var(--gad-size-fine);
+  letter-spacing: var(--gad-tracking);
+}
+
+.gad-figure-frame svg text {
+  fill: var(--gad-ink);
+}
+
+/* 箱、丸、意味を持つ線。 */
+.gad-node {
+  fill: none;
+  stroke: var(--gad-ink);
+  stroke-width: 1;
+}
+
+/* 補助線、つなぎの線。 */
+.gad-link {
+  fill: none;
+  stroke: var(--gad-mark);
+  stroke-width: 1;
+}
+
+/* 矢印の頭のような、塗る印。 */
+.gad-arrow {
+  fill: var(--gad-mark);
+}
+
 /* ---------- 9. 決定の箱 ---------- */
 /* 「決まったこと」。番号を振り、1項目に1行の理由を添える。 */
 
