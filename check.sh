@@ -126,6 +126,38 @@ check("--gad-alert に載せる墨が 4.5 以上",
       ratio(token("--gad-ink"), token("--gad-alert")) >= 4.5,
       f"{ratio(token('--gad-ink'), token('--gad-alert'))}")
 
+# 9. 図の系列5色。文書へ漏れていないこと、明暗差が STYLE-GUIDE と合うこと
+figure = pathlib.Path("tokens-figure.css").read_text()
+
+leaked = re.findall(r'var\(--gad-series-\d\)', doc)
+check("document.css が図の色を参照していない", not leaked, f"見つかった: {leaked}")
+check("見本が図の色を参照していない",
+      not re.findall(r'--gad-series-\d', html), "見本は文書の側なので図の色を使わない")
+
+def figure_token(name):
+    m = re.search(rf'^\s*{re.escape(name)}\s*:\s*(#[0-9a-fA-F]{{6}})', figure, re.M)
+    assert m, f"tokens-figure.css に {name} が無い"
+    return m.group(1)
+
+series = re.findall(
+    r'^\|\s*`(--gad-series-\d)`\s*\|[^|]*\|\s*`(#[0-9a-fA-F]{6})`\s*\|'
+    r'\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|', guide, re.M)
+check("STYLE-GUIDE の系列の表が5色ある", len(series) == 5, f"読めた行: {len(series)}")
+
+ink = token("--gad-ink")
+for name, hexv, w, i, k in series:
+    real = figure_token(name)
+    check(f"{name} の値が STYLE-GUIDE と tokens-figure.css で同じ", real == hexv, f"{hexv} と {real}")
+    check(f"{name} の白地への明暗差 {w}", ratio(real, paper) == float(w), f"実測 {ratio(real, paper)}")
+    check(f"{name} の沈んだ地への明暗差 {i}", ratio(real, inset) == float(i), f"実測 {ratio(real, inset)}")
+    check(f"{name} に載る墨の明暗差 {k}", ratio(ink, real) == float(k), f"実測 {ratio(ink, real)}")
+    check(f"{name} は印として置ける（沈んだ地でも 3.0 以上）", ratio(real, inset) >= 3.0)
+    check(f"{name} の上に墨を載せられる（4.5 以上）", ratio(ink, real) >= 4.5)
+
+# 白黒で潰れる事実が STYLE-GUIDE に書いてあること（形と併用する根拠）
+check("STYLE-GUIDE に、色だけで区別しない理由が書いてある",
+      "二重の手がかり" in guide and "白黒" in guide)
+
 print()
 if fail:
     print(f"崩れている: {len(fail)} 件")
