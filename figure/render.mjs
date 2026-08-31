@@ -102,39 +102,96 @@ const openControls = (s) =>
 
 /* ---------- 検査 ---------- */
 
-const KEYWORDS = new Set([
-  "$schema", "$id", "title", "description", "type", "const", "enum", "required",
-  "properties", "additionalProperties", "items", "minItems", "maxItems",
-  "minLength", "maxLength", "$ref", "$defs",
-]);
-
-/** schema.json が、この最小の検査器で読めるキーワードだけで書かれているか。 */
-export const unsupportedKeywords = (node = SCHEMA, seen = new Set()) => {
-  if (node === null || typeof node !== "object") return [...seen];
-  if (Array.isArray(node)) {
-    for (const v of node) unsupportedKeywords(v, seen);
-    return [...seen];
-  }
-  for (const [k, v] of Object.entries(node)) {
-    if (!KEYWORDS.has(k)) seen.add(k);
-    if (k === "properties" || k === "$defs") {
-      for (const sub of Object.values(v)) unsupportedKeywords(sub, seen);
-    } else if (k === "items") {
-      unsupportedKeywords(v, seen);
-    }
-  }
-  return [...seen];
-};
-
 const typeOf = (v) => (Array.isArray(v) ? "array" : v === null ? "null" : typeof v);
 
+const REF = /^#\/\$defs\/([A-Za-z0-9_]+)$/;
+
 const resolve = (ref) => {
-  const m = /^#\/\$defs\/([A-Za-z0-9_]+)$/.exec(ref);
+  const m = REF.exec(ref);
   if (!m || !SCHEMA.$defs?.[m[1]]) throw new Error(`schema.json の $ref が引けない: ${ref}`);
   return SCHEMA.$defs[m[1]];
 };
 
 const show = (v) => (typeof v === "string" ? `"${v}"` : JSON.stringify(v));
+
+/* ---------- 守り。schema.json が検査器を追い越していないか ---------- */
+
+/*
+ * schema.json を「入力の正本」と名乗らせている以上、そこに書いたことが実際に
+ * 効いている必要がある。検査器は JSON Schema の一部しか実装していないので、
+ * 実装した書き方の外へ出ていないかをここで見る。
+ *
+ * 見るのはキーワードの名前と、その値の形の両方。名前だけを見ていると、
+ * additionalProperties を false から schema へ書き換えるような「厳しくした
+ * つもり」で検査が黙って効かなくなる。緩む向きの間違いは、締めすぎる向きと
+ * 違って見本が落ちてくれないので、ここで捕まえるしかない。
+ *
+ * 返り値が空なら、schema に書いたことは全部 checkSchema が実際に見ている。
+ */
+
+const TYPES = ["object", "array", "string", "number", "boolean", "null"];
+const ANNOTATIONS = ["$schema", "$id", "title", "description"];
+
+const isPlain = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+const isValue = (v) => v === null || ["string", "number", "boolean"].includes(typeof v);
+const isCount = (v) => Number.isInteger(v) && v >= 0;
+
+const text = (v) => (typeof v === "string" ? null : "文字で書く");
+const count = (v) => (isCount(v) ? null : `0 以上の整数で書く(${show(v)} がある)`);
+const asSchema = (v) => (isPlain(v) ? null : "名前と schema の対応で書く");
+
+/* キーワードごとに、実装した書き方かどうかを見る。null なら読める。 */
+const FORMS = {
+  ...Object.fromEntries(ANNOTATIONS.map((k) => [k, text])),
+  type: (v) => (TYPES.includes(v) ? null : `見るのは ${TYPES.join(" / ")} だけ(${show(v)} がある)`),
+  const: (v) => (isValue(v) ? null : "=== で比べるので、書けるのは値そのもの(文字・数・真偽・null)だけ"),
+  enum: (v) => (Array.isArray(v) && v.length > 0 && v.every(isValue)
+    ? null : "値そのものを1つ以上並べた配列で書く"),
+  required: (v) => (Array.isArray(v) && v.every((x) => typeof x === "string")
+    ? null : "キー名を並べた配列で書く"),
+  additionalProperties: (v) => (v === false ? null : `false だけを実装している(${show(v)} がある)`),
+  items: (v) => (isPlain(v) ? null : "schema を1つだけ書く。並べて書く形(タプル)は実装していない"),
+  properties: asSchema,
+  $defs: asSchema,
+  minItems: count, maxItems: count, minLength: count, maxLength: count,
+  $ref: (v) => {
+    if (typeof v !== "string" || !REF.test(v)) return '"#/$defs/名前" の形だけを引ける';
+    return SCHEMA.$defs?.[REF.exec(v)[1]] ? null : `引く先が $defs に無い(${v})`;
+  },
+};
+
+/** 形が読めたときだけ、その先の schema へ入る。 */
+const DESCEND = {
+  items: (v, at, gaps) => schemaGaps(v, at, gaps),
+  properties: (v, at, gaps) => Object.entries(v).forEach(([n, sub]) => schemaGaps(sub, `${at}/${n}`, gaps)),
+  $defs: (v, at, gaps) => Object.entries(v).forEach(([n, sub]) => schemaGaps(sub, `${at}/${n}`, gaps)),
+};
+
+export const schemaGaps = (node = SCHEMA, at = "", gaps = []) => {
+  if (!isPlain(node)) {
+    gaps.push(`${at || "/"}: schema はオブジェクトで書く(${show(node)} がある)`);
+    return gaps;
+  }
+  /* $ref に当たると隣を見ずにそちらへ移るので、隣に書いたものは効かない。 */
+  if ("$ref" in node) {
+    const ignored = Object.keys(node).filter((k) => k !== "$ref" && !ANNOTATIONS.includes(k));
+    if (ignored.length > 0) {
+      gaps.push(`${at}/$ref: $ref の隣に書いたものは見ない(${ignored.join(" / ")})`);
+    }
+  }
+  for (const [k, v] of Object.entries(node)) {
+    const here = `${at}/${k}`;
+    const form = FORMS[k];
+    if (!form) {
+      gaps.push(`${here}: 実装していないキーワード`);
+      continue;
+    }
+    const complaint = form(v);
+    if (complaint) gaps.push(`${here}: ${complaint}`);
+    else DESCEND[k]?.(v, here, gaps);
+  }
+  return gaps;
+};
 
 const checkSchema = (value, schema, at, out) => {
   if (schema.$ref) return checkSchema(value, resolve(schema.$ref), at, out);

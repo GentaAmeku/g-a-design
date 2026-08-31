@@ -180,7 +180,7 @@ def deliver(*args):
 check("node がある", NODE is not None, "figure/ の生成器を走らせるのに要る")
 
 probe = node('import("./figure/render.mjs").then(m=>console.log(JSON.stringify({'
-             'spec:m.SPEC,kinds:m.KINDS,unsupported:m.unsupportedKeywords(),'
+             'spec:m.SPEC,kinds:m.KINDS,gaps:m.schemaGaps(),'
              'wide:m.toPx(m.SPEC.capWide),hex:m.toPx(m.SPEC.capHex)})))')
 check("figure/render.mjs が読める", probe.returncode == 0,
       (probe.stderr.strip().splitlines() or ["理由が出ていない"])[-1])
@@ -191,8 +191,24 @@ if probe.returncode == 0:
     kinds = info["kinds"]
 
     schema = json.loads(pathlib.Path("figure/schema.json").read_text())
-    check("figure/schema.json が、render.mjs の検査器で読めるキーワードだけでできている",
-          not info["unsupported"], f"未対応: {info['unsupported']}")
+    check("figure/schema.json が、render.mjs の検査器で読める書き方だけでできている",
+          not info["gaps"], " / ".join(info["gaps"]))
+
+    # 守りそのものを試す。名前だけでなく、値の形のずれも捕まえられるか
+    probes = node('import("./figure/render.mjs").then(m=>console.log(JSON.stringify(['
+                  '{name:"additionalProperties を schema で書く",node:{additionalProperties:{type:"string"}}},'
+                  '{name:"items をタプル形で書く",node:{items:[{},{}]}},'
+                  '{name:"type に integer を書く",node:{type:"integer"}},'
+                  '{name:"$ref の隣にキーワードを書く",node:{$ref:"#/$defs/kind",minLength:1}},'
+                  '{name:"引けない $ref を書く",node:{$ref:"#/$defs/nowhere"}},'
+                  '{name:"実装していないキーワードを書く",node:{pattern:"^a$"}},'
+                  '{name:"schema でないものを置く",node:{properties:{x:42}}}'
+                  '].map(c=>({name:c.name,gaps:m.schemaGaps(c.node).length})))))')
+    if probes.returncode == 0:
+        for c in json.loads(probes.stdout):
+            check(f"守りが捕まえる: {c['name']}", c["gaps"] > 0, "素通りした")
+    else:
+        check("守りそのものを試せる", False, probes.stderr.strip().splitlines()[-1][:160])
     check("schema の kind が4種", len(schema["$defs"]["kind"]["enum"]) == 4,
           f"{schema['$defs']['kind']['enum']}")
     check("schema の kind と render.mjs の KINDS が同じ",
