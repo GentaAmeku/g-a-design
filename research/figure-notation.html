@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>図の記法 — 候補3案(2026-08-31)</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@400;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../document.css">
+<style>
+.gad-page { max-width: 784px; }
+section { margin-bottom: var(--gad-gap-section); }
+</style>
+</head>
+<body>
+<div class="gad-page">
+<h1>図の記法 — 候補3案</h1>
+<p class="gad-signature">G.A Design / 2026-08-31 / 決めるのは「種別を形で出す語彙」</p>
+<div class="gad-summary">
+<p>種別4種(段・分かれ目・外・保管)を、色を使わず形だけで出す。3案とも箱は 176×48px、縦の間隔 44px、横の間隔 20px で固定してある。使う class は <code>.gad-node</code> / <code>.gad-link</code> / <code>.gad-arrow</code> の3つだけで、SVG に色は書いていない。<strong>採用は A(輪郭)。2026-08-31 に本人が選んだ。</strong>この頁は、そのとき並べたものをそのまま残してある。</p>
+</div>
+
+<section>
+  <h2>A 輪郭 — 採用</h2>
+  <p>箱の形そのものを変える。フローチャートの共通語彙(六角・破線枠・円筒)を借りる。</p>
+  <figure class="gad-figure">
+    <div class="gad-figure-frame"><svg width="384" height="112" viewBox="-6 0 384 112" role="img" aria-label="4種の凡例">
+  <rect class="gad-node" x="0" y="0" width="176" height="48" rx="6"/><text x="88" y="29" text-anchor="middle">段</text>
+  <polygon class="gad-node" points="210,0 358,0 372,24 358,48 210,48 196,24"/><text x="284" y="29" text-anchor="middle">分かれ目</text>
+  <rect class="gad-node" x="0" y="64" width="176" height="48" rx="6" stroke-dasharray="5 4"/><text x="88" y="93" text-anchor="middle">外</text>
+  <path class="gad-node" d="M196 70 a88 6 0 0 1 176 0 v36 a88 6 0 0 1 -176 0 z"/><path class="gad-node" d="M196 70 a88 6 0 0 0 176 0"/><text x="284" y="96" text-anchor="middle">保管</text>
+</svg></div>
+    <figcaption>凡例 &nbsp;4種を単体で見る。ラベルの上限は 段 10 / 分かれ目 8 / 外 10 / 保管 10 字幅。</figcaption>
+  </figure>
+  <figure class="gad-figure">
+    <div class="gad-figure-frame"><svg width="568" height="416" viewBox="0 0 568 416" role="img" aria-label="記法の見本">
+  <line class="gad-link" x1="284" y1="48" x2="284" y2="84"/>
+  <polygon class="gad-arrow" points="280,84 288,84 284,92"/>
+  <line class="gad-link" x1="284" y1="140" x2="284" y2="176"/>
+  <polygon class="gad-arrow" points="280,176 288,176 284,184"/>
+  <line class="gad-link" x1="284" y1="232" x2="284" y2="254"/>
+  <line class="gad-link" x1="88" y1="254" x2="480" y2="254"/>
+  <line class="gad-link" x1="88" y1="254" x2="88" y2="268"/>
+  <polygon class="gad-arrow" points="84,268 92,268 88,276"/>
+  <line class="gad-link" x1="284" y1="254" x2="284" y2="268"/>
+  <polygon class="gad-arrow" points="280,268 288,268 284,276"/>
+  <line class="gad-link" x1="480" y1="254" x2="480" y2="268"/>
+  <polygon class="gad-arrow" points="476,268 484,268 480,276"/>
+  <line class="gad-link" x1="88" y1="346" x2="480" y2="346"/>
+  <line class="gad-link" x1="88" y1="324" x2="88" y2="346"/>
+  <line class="gad-link" x1="284" y1="324" x2="284" y2="346"/>
+  <line class="gad-link" x1="480" y1="324" x2="480" y2="346"/>
+  <line class="gad-link" x1="284" y1="346" x2="284" y2="360"/>
+  <polygon class="gad-arrow" points="280,360 288,360 284,368"/>
+  <rect class="gad-node" x="196" y="0" width="176" height="48" rx="6" stroke-dasharray="5 4"/><text x="284" y="29" text-anchor="middle">依頼が届く</text>
+  <rect class="gad-node" x="196" y="92" width="176" height="48" rx="6"/><text x="284" y="121" text-anchor="middle">中身を読む</text>
+  <polygon class="gad-node" points="210,184 358,184 372,208 358,232 210,232 196,208"/><text x="284" y="213" text-anchor="middle">規模は</text>
+  <rect class="gad-node" x="0" y="276" width="176" height="48" rx="6"/><text x="88" y="305" text-anchor="middle">その場で直す</text>
+  <rect class="gad-node" x="196" y="276" width="176" height="48" rx="6"/><text x="284" y="305" text-anchor="middle">設計から作る</text>
+  <rect class="gad-node" x="392" y="276" width="176" height="48" rx="6"/><text x="480" y="305" text-anchor="middle">断る</text>
+  <path class="gad-node" d="M196 374 a88 6 0 0 1 176 0 v36 a88 6 0 0 1 -176 0 z"/><path class="gad-node" d="M196 374 a88 6 0 0 0 176 0"/><text x="284" y="400" text-anchor="middle">記録に残す</text>
+</svg></div>
+    <figcaption>組んだところ &nbsp;縦の連鎖・枝分かれ・合流を1枚に入れた。ノード7つ、横に並ぶ兄弟3つ。</figcaption>
+  </figure>
+  <figure class="gad-figure">
+    <div class="gad-figure-frame"><svg width="238.07999999999998" height="69.44" viewBox="-6 0 384 112" role="img" aria-label="4種の凡例">
+  <rect class="gad-node" x="0" y="0" width="176" height="48" rx="6"/><text x="88" y="29" text-anchor="middle">段</text>
+  <polygon class="gad-node" points="210,0 358,0 372,24 358,48 210,48 196,24"/><text x="284" y="29" text-anchor="middle">分かれ目</text>
+  <rect class="gad-node" x="0" y="64" width="176" height="48" rx="6" stroke-dasharray="5 4"/><text x="88" y="93" text-anchor="middle">外</text>
+  <path class="gad-node" d="M196 70 a88 6 0 0 1 176 0 v36 a88 6 0 0 1 -176 0 z"/><path class="gad-node" d="M196 70 a88 6 0 0 0 176 0"/><text x="284" y="96" text-anchor="middle">保管</text>
+</svg></div>
+    <figcaption>紙の大きさ &nbsp;62% に縮めたところ。A4 に載る実寸に近い。</figcaption>
+  </figure>
+  <div class="gad-note">遠目に一番効く。読み手が既に知っている形なので凡例が要らない。代わりに、六角形は左右の尖りぶんラベルが 2 字ぶん狭くなり、円筒は 176×48 の横長では「皿」に見える。</div>
+</section>
+
+<section>
+  <h2>B 枠の本数</h2>
+  <p>外形は角丸長方形ひとつに固定し、枠線の本数と実線・破線だけで分ける。</p>
+  <figure class="gad-figure">
+    <div class="gad-figure-frame"><svg width="384" height="112" viewBox="-6 0 384 112" role="img" aria-label="4種の凡例">
+  <rect class="gad-node" x="0" y="0" width="176" height="48" rx="6"/><text x="88" y="29" text-anchor="middle">段</text>
+  <rect class="gad-node" x="196" y="0" width="176" height="48" rx="6"/><rect class="gad-node" x="200" y="4" width="168" height="40" rx="4"/><text x="284" y="29" text-anchor="middle">分かれ目</text>
+  <rect class="gad-node" x="0" y="64" width="176" height="48" rx="6" stroke-dasharray="5 4"/><text x="88" y="93" text-anchor="middle">外</text>
+  <rect class="gad-node" x="196" y="64" width="176" height="48" rx="6"/><line class="gad-node" x1="196" y1="74" x2="372" y2="74"/><line class="gad-node" x1="196" y1="102" x2="372" y2="102"/><text x="284" y="93" text-anchor="middle">保管</text>
+</svg></div>
+    <figcaption>凡例 &nbsp;4種を単体で見る。ラベルの上限は 段 10 / 分かれ目 10 / 外 10 / 保管 10 字幅。</figcaption>
+  </figure>
+  <figure class="gad-figure">
+    <div class="gad-figure-frame"><svg width="568" height="416" viewBox="0 0 568 416" role="img" aria-label="記法の見本">
+  <line class="gad-link" x1="284" y1="48" x2="284" y2="84"/>
+  <polygon class="gad-arrow" points="280,84 288,84 284,92"/>
+  <line class="gad-link" x1="284" y1="140" x2="284" y2="176"/>
+  <polygon class="gad-arrow" points="280,176 288,176 284,184"/>
+  <line class="gad-link" x1="284" y1="232" x2="284" y2="254"/>
+  <line class="gad-link" x1="88" y1="254" x2="480" y2="254"/>
+  <line class="gad-link" x1="88" y1="254" x2="88" y2="268"/>
+  <polygon class="gad-arrow" points="84,268 92,268 88,276"/>
+  <line class="gad-link" x1="284" y1="254" x2="284" y2="268"/>
+  <polygon class="gad-arrow" points="280,268 288,268 284,276"/>
+  <line class="gad-link" x1="480" y1="254" x2="480" y2="268"/>
+  <polygon class="gad-arrow" points="476,268 484,268 480,276"/>
+  <line class="gad-link" x1="88" y1="346" x2="480" y2="346"/>
+  <line class="gad-link" x1="88" y1="324" x2="88" y2="346"/>
+  <line class="gad-link" x1="284" y1="324" x2="284" y2="346"/>
+  <line class="gad-link" x1="480" y1="324" x2="480" y2="346"/>
+  <line class="gad-link" x1="284" y1="346" x2="284" y2="360"/>
+  <polygon class="gad-arrow" points="280,360 288,360 284,368"/>
+  <rect class="gad-node" x="196" y="0" width="176" height="48" rx="6" stroke-dasharray="5 4"/><text x="284" y="29" text-anchor="middle">依頼が届く</text>
+  <rect class="gad-node" x="196" y="92" width="176" height="48" rx="6"/><text x="284" y="121" text-anchor="middle">中身を読む</text>
+  <rect class="gad-node" x="196" y="184" width="176" height="48" rx="6"/><rect class="gad-node" x="200" y="188" width="168" height="40" rx="4"/><text x="284" y="213" text-anchor="middle">規模は</text>
+  <rect class="gad-node" x="0" y="276" width="176" height="48" rx="6"/><text x="88" y="305" text-anchor="middle">その場で直す</text>
+  <rect class="gad-node" x="196" y="276" width="176" height="48" rx="6"/><text x="284" y="305" text-anchor="middle">設計から作る</text>
+  <rect class="gad-node" x="392" y="276" width="176" height="48" rx="6"/><text x="480" y="305" text-anchor="middle">断る</text>
+  <rect class="gad-node" x="196" y="368" width="176" height="48" rx="6"/><line class="gad-node" x1="196" y1="378" x2="372" y2="378"/><line class="gad-node" x1="196" y1="406" x2="372" y2="406"/><text x="284" y="397" text-anchor="middle">記録に残す</text>
+</svg></div>
+    <figcaption>組んだところ &nbsp;縦の連鎖・枝分かれ・合流を1枚に入れた。ノード7つ、横に並ぶ兄弟3つ。</figcaption>
+  </figure>
+  <figure class="gad-figure">
+    <div class="gad-figure-frame"><svg width="238.07999999999998" height="69.44" viewBox="-6 0 384 112" role="img" aria-label="4種の凡例">
+  <rect class="gad-node" x="0" y="0" width="176" height="48" rx="6"/><text x="88" y="29" text-anchor="middle">段</text>
+  <rect class="gad-node" x="196" y="0" width="176" height="48" rx="6"/><rect class="gad-node" x="200" y="4" width="168" height="40" rx="4"/><text x="284" y="29" text-anchor="middle">分かれ目</text>
+  <rect class="gad-node" x="0" y="64" width="176" height="48" rx="6" stroke-dasharray="5 4"/><text x="88" y="93" text-anchor="middle">外</text>
+  <rect class="gad-node" x="196" y="64" width="176" height="48" rx="6"/><line class="gad-node" x1="196" y1="74" x2="372" y2="74"/><line class="gad-node" x1="196" y1="102" x2="372" y2="102"/><text x="284" y="93" text-anchor="middle">保管</text>
+</svg></div>
+    <figcaption>紙の大きさ &nbsp;62% に縮めたところ。A4 に載る実寸に近い。</figcaption>
+  </figure>
+  <div class="gad-note">4種とも寸法が完全に同じで、ラベルの上限も同じ。版付けの分岐が要らない。代わりに「二重線=分かれ目」「破線=外」は共通語彙ではないので、初出の図に凡例か文が要る。</div>
+</section>
+
+<section>
+  <h2>C 添える印</h2>
+  <p>箱は4種とも同一。左辺に 12px の印を掛け、その印の形で分ける。</p>
+  <figure class="gad-figure">
+    <div class="gad-figure-frame"><svg width="384" height="112" viewBox="-6 0 384 112" role="img" aria-label="4種の凡例">
+  <rect class="gad-node" x="0" y="0" width="176" height="48" rx="6"/><text x="88" y="29" text-anchor="middle">段</text>
+  <rect class="gad-node" x="196" y="0" width="176" height="48" rx="6"/><polygon class="gad-arrow" points="196,18 202,24 196,30 190,24"/><text x="284" y="29" text-anchor="middle">分かれ目</text>
+  <rect class="gad-node" x="0" y="64" width="176" height="48" rx="6"/><polygon class="gad-arrow" points="-6,82 6,88 -6,94"/><text x="88" y="93" text-anchor="middle">外</text>
+  <rect class="gad-node" x="196" y="64" width="176" height="48" rx="6"/><rect class="gad-arrow" x="190" y="81" width="12" height="4"/><rect class="gad-arrow" x="190" y="91" width="12" height="4"/><text x="284" y="93" text-anchor="middle">保管</text>
+</svg></div>
+    <figcaption>凡例 &nbsp;4種を単体で見る。ラベルの上限は 段 10 / 分かれ目 10 / 外 10 / 保管 10 字幅。</figcaption>
+  </figure>
+  <figure class="gad-figure">
+    <div class="gad-figure-frame"><svg width="568" height="416" viewBox="0 0 568 416" role="img" aria-label="記法の見本">
+  <line class="gad-link" x1="284" y1="48" x2="284" y2="84"/>
+  <polygon class="gad-arrow" points="280,84 288,84 284,92"/>
+  <line class="gad-link" x1="284" y1="140" x2="284" y2="176"/>
+  <polygon class="gad-arrow" points="280,176 288,176 284,184"/>
+  <line class="gad-link" x1="284" y1="232" x2="284" y2="254"/>
+  <line class="gad-link" x1="88" y1="254" x2="480" y2="254"/>
+  <line class="gad-link" x1="88" y1="254" x2="88" y2="268"/>
+  <polygon class="gad-arrow" points="84,268 92,268 88,276"/>
+  <line class="gad-link" x1="284" y1="254" x2="284" y2="268"/>
+  <polygon class="gad-arrow" points="280,268 288,268 284,276"/>
+  <line class="gad-link" x1="480" y1="254" x2="480" y2="268"/>
+  <polygon class="gad-arrow" points="476,268 484,268 480,276"/>
+  <line class="gad-link" x1="88" y1="346" x2="480" y2="346"/>
+  <line class="gad-link" x1="88" y1="324" x2="88" y2="346"/>
+  <line class="gad-link" x1="284" y1="324" x2="284" y2="346"/>
+  <line class="gad-link" x1="480" y1="324" x2="480" y2="346"/>
+  <line class="gad-link" x1="284" y1="346" x2="284" y2="360"/>
+  <polygon class="gad-arrow" points="280,360 288,360 284,368"/>
+  <rect class="gad-node" x="196" y="0" width="176" height="48" rx="6"/><polygon class="gad-arrow" points="190,18 202,24 190,30"/><text x="284" y="29" text-anchor="middle">依頼が届く</text>
+  <rect class="gad-node" x="196" y="92" width="176" height="48" rx="6"/><text x="284" y="121" text-anchor="middle">中身を読む</text>
+  <rect class="gad-node" x="196" y="184" width="176" height="48" rx="6"/><polygon class="gad-arrow" points="196,202 202,208 196,214 190,208"/><text x="284" y="213" text-anchor="middle">規模は</text>
+  <rect class="gad-node" x="0" y="276" width="176" height="48" rx="6"/><text x="88" y="305" text-anchor="middle">その場で直す</text>
+  <rect class="gad-node" x="196" y="276" width="176" height="48" rx="6"/><text x="284" y="305" text-anchor="middle">設計から作る</text>
+  <rect class="gad-node" x="392" y="276" width="176" height="48" rx="6"/><text x="480" y="305" text-anchor="middle">断る</text>
+  <rect class="gad-node" x="196" y="368" width="176" height="48" rx="6"/><rect class="gad-arrow" x="190" y="385" width="12" height="4"/><rect class="gad-arrow" x="190" y="395" width="12" height="4"/><text x="284" y="397" text-anchor="middle">記録に残す</text>
+</svg></div>
+    <figcaption>組んだところ &nbsp;縦の連鎖・枝分かれ・合流を1枚に入れた。ノード7つ、横に並ぶ兄弟3つ。</figcaption>
+  </figure>
+  <figure class="gad-figure">
+    <div class="gad-figure-frame"><svg width="238.07999999999998" height="69.44" viewBox="-6 0 384 112" role="img" aria-label="4種の凡例">
+  <rect class="gad-node" x="0" y="0" width="176" height="48" rx="6"/><text x="88" y="29" text-anchor="middle">段</text>
+  <rect class="gad-node" x="196" y="0" width="176" height="48" rx="6"/><polygon class="gad-arrow" points="196,18 202,24 196,30 190,24"/><text x="284" y="29" text-anchor="middle">分かれ目</text>
+  <rect class="gad-node" x="0" y="64" width="176" height="48" rx="6"/><polygon class="gad-arrow" points="-6,82 6,88 -6,94"/><text x="88" y="93" text-anchor="middle">外</text>
+  <rect class="gad-node" x="196" y="64" width="176" height="48" rx="6"/><rect class="gad-arrow" x="190" y="81" width="12" height="4"/><rect class="gad-arrow" x="190" y="91" width="12" height="4"/><text x="284" y="93" text-anchor="middle">保管</text>
+</svg></div>
+    <figcaption>紙の大きさ &nbsp;62% に縮めたところ。A4 に載る実寸に近い。</figcaption>
+  </figure>
+  <div class="gad-note">箱が完全に同じなので、並べたときの列が最も整う。印は塗り(--gad-mark)なので小さくても潰れない。代わりに、遠目には全部同じ箱に見え、印の意味は凡例なしには分からない。</div>
+</section>
+</div>
+</body>
+</html>

@@ -5,7 +5,8 @@
 #   ./check.sh
 #
 # STYLE-GUIDE.md が主張していることが、実際のファイルでも成り立つかを確かめる。
-# 1つでも崩れていたら 1 で終わる。python3 のほかに要るものは無い。
+# 1つでも崩れていたら 1 で終わる。要るのは python3 と node だけ。
+# node は figure/ の生成器を、実際に走らせて確かめるために使う。
 
 set -uo pipefail
 cd "$(dirname "$0")"
@@ -157,6 +158,149 @@ for name, hexv, w, i, k in series:
 # 白黒で潰れる事実が STYLE-GUIDE に書いてあること（形と併用する根拠）
 check("STYLE-GUIDE に、色だけで区別しない理由が書いてある",
       "二重の手がかり" in guide and "白黒" in guide)
+
+# 10. 図の生成器。STYLE-GUIDE の「図の記法」が、figure/ の実物と合っているか
+import json, subprocess, tempfile, os
+
+def node(js):
+    return subprocess.run(["node", "-e", js], capture_output=True, text=True)
+
+def deliver(*args):
+    return subprocess.run(["node", "figure/deliver.mjs", *args], capture_output=True, text=True)
+
+probe = node('import("./figure/render.mjs").then(m=>console.log(JSON.stringify({'
+             'spec:m.SPEC,kinds:m.KINDS,unsupported:m.unsupportedKeywords(),'
+             'wide:m.toPx(m.SPEC.capWide),hex:m.toPx(m.SPEC.capHex)})))')
+check("figure/render.mjs が読める", probe.returncode == 0, probe.stderr.strip().splitlines()[-1:] and probe.stderr.strip().splitlines()[-1] or "node が要る")
+
+if probe.returncode == 0:
+    info  = json.loads(probe.stdout)
+    spec  = info["spec"]
+    kinds = info["kinds"]
+
+    schema = json.loads(pathlib.Path("figure/schema.json").read_text())
+    check("figure/schema.json が、render.mjs の検査器で読めるキーワードだけでできている",
+          not info["unsupported"], f"未対応: {info['unsupported']}")
+    check("schema の kind が4種", len(schema["$defs"]["kind"]["enum"]) == 4,
+          f"{schema['$defs']['kind']['enum']}")
+    check("schema の kind と render.mjs の KINDS が同じ",
+          set(schema["$defs"]["kind"]["enum"]) == set(kinds),
+          f"{sorted(schema['$defs']['kind']['enum'])} と {sorted(kinds)}")
+    check("schema の枝の上限が SPEC と同じ",
+          schema["$defs"]["node"]["properties"]["fork"]["maxItems"] == spec["maxSiblings"])
+    check("schema が caption を必須にしている", "caption" in schema["required"])
+
+    # STYLE-GUIDE の種別の表
+    rows = re.findall(r'^\|\s*`(step|branch|outside|store)`\s*\|\s*(\S+)\s*\|\s*(\S+)\s*\|\s*(\d+)\s*字幅\s*\|',
+                      guide, re.M)
+    check("STYLE-GUIDE の種別の表が4行ある", len(rows) == 4, f"読めた行: {len(rows)}")
+    for name, ja, shape, cap in rows:
+        k = kinds[name]
+        check(f"{name} の呼び名・形・上限が render.mjs と同じ",
+              (ja, shape, int(cap)) == (k["ja"], k["shape"], k["cap"]),
+              f"STYLE-GUIDE は {(ja, shape, int(cap))}、render.mjs は {(k['ja'], k['shape'], k['cap'])}")
+
+    # STYLE-GUIDE の寸法の表
+    SIZES = {"箱": ["boxW", "boxH"], "縦の間隔": ["gapV"], "横の間隔": ["gapH"],
+             "箱の内側の余白": ["padX"], "六角形の尖り": ["hexPoint"], "円筒の楕円": ["cylinderRy"],
+             "矢印の頭": ["arrow"], "ノードの上限": ["maxNodes"], "横に並ぶ枝": ["maxSiblings"]}
+    written = dict(re.findall(r'^\|\s*(箱|縦の間隔|横の間隔|箱の内側の余白|六角形の尖り|円筒の楕円|矢印の頭|ノードの上限|横に並ぶ枝)\s*\|\s*(.+?)\s*\|\s*$',
+                              guide, re.M))
+    check("STYLE-GUIDE の寸法の表が9行ある", len(written) == 9, f"読めた行: {sorted(written)}")
+    for label, keys in SIZES.items():
+        if label not in written:
+            continue
+        nums = [int(n) for n in re.findall(r'\d+', written[label])]
+        check(f"寸法「{label}」が render.mjs の SPEC と同じ",
+              nums == [spec[k] for k in keys],
+              f"STYLE-GUIDE は {nums}、SPEC は {[spec[k] for k in keys]}")
+
+    # 数字の裏取り。箱に収まること、本文の幅に収まること
+    inner     = spec["boxW"] - 2 * spec["padX"]
+    inner_hex = spec["boxW"] - 2 * spec["hexPoint"] - 2 * spec["padX"]
+    row3      = 3 * spec["boxW"] + 2 * spec["gapH"]
+    frame     = 640 - 2 - 48  # .gad-measure − 枠 1px×2 − .gad-figure-frame の余白 24px×2
+
+    m = re.search(r'上限 10 字幅は ([\d.]+)px で、箱の内寸 (\d+)px に収まる', guide)
+    check("STYLE-GUIDE に、上限 10 字幅が箱に収まる根拠が書いてある", bool(m))
+    if m:
+        check(f"10 字幅 = {m.group(1)}px", round(info["wide"], 1) == float(m.group(1)),
+              f"実測 {round(info['wide'], 1)}")
+        check(f"箱の内寸 = {m.group(2)}px", inner == int(m.group(2)), f"実測 {inner}")
+        check("10 字幅が箱の内寸に収まる", info["wide"] <= inner, f"{info['wide']} > {inner}")
+
+    m = re.search(r'六角形の 8 字幅は ([\d.]+)px で、尖りを引いた内寸 (\d+)px に収まる', guide)
+    check("STYLE-GUIDE に、六角形の上限が内寸に収まる根拠が書いてある", bool(m))
+    if m:
+        check(f"8 字幅 = {m.group(1)}px", round(info["hex"], 1) == float(m.group(1)),
+              f"実測 {round(info['hex'], 1)}")
+        check(f"六角形の内寸 = {m.group(2)}px", inner_hex == int(m.group(2)), f"実測 {inner_hex}")
+        check("8 字幅が六角形の内寸に収まる", info["hex"] <= inner_hex, f"{info['hex']} > {inner_hex}")
+
+    m = re.search(r'3つ横に並べた (\d+)px が `\\?\.gad-figure-frame` の内寸 (\d+)px', guide)
+    check("STYLE-GUIDE に、枝3つが本文に収まる根拠が書いてある", bool(m))
+    if m:
+        check(f"枝3つの幅 = {m.group(1)}px", row3 == int(m.group(1)), f"実測 {row3}")
+        check(f".gad-figure-frame の内寸 = {m.group(2)}px", frame == int(m.group(2)), f"実測 {frame}")
+        check("枝3つが本文の幅に収まる", row3 + 2 <= frame, f"{row3 + 2} > {frame}")
+
+    # 図の語彙が document.css にある
+    for cls in ("gad-node", "gad-link", "gad-arrow"):
+        check(f".{cls} が document.css にある", f".{cls}" in doc)
+
+    # STYLE-GUIDE に載せた診断の例が、生成器が実際に出す文と一字一句同じか
+    m = re.search(r'```\n(\[label/width\] [^\n]*\n {4}直し方: [^\n]*)\n```', guide)
+    check("STYLE-GUIDE に診断の例が載っている", bool(m))
+    if m:
+        written_diag = m.group(1)
+        label = re.search(r'「(.+?)」 ', written_diag).group(1)
+        with tempfile.TemporaryDirectory() as d:
+            src = os.path.join(d, "doc-example.json")
+            pathlib.Path(src).write_text(json.dumps({
+                "figure": 1, "caption": "STYLE-GUIDE に載せている診断の例",
+                "flow": [{"label": label, "kind": "branch",
+                          "fork": [{"label": "直す"}, {"label": "作る"}]}]}, ensure_ascii=False))
+            r = deliver(src)
+            got = "\n".join(l for l in r.stderr.splitlines() if l.startswith("[label/width]") or l.startswith("    直し方:"))
+        check("STYLE-GUIDE の診断の例が、実際の出力と同じ", got == written_diag,
+              f"実際は:\n{got}")
+
+    # 見本の入力。broken.json は落ちるためにある
+    inputs = sorted(p.name for p in pathlib.Path("figure/examples").glob("*.json"))
+    check("figure/examples に入力がある", len(inputs) >= 2, f"{inputs}")
+    ALLOWED = {"gad-figure", "gad-figure-frame", "gad-node", "gad-link", "gad-arrow"}
+    for name in inputs:
+        src = f"figure/examples/{name}"
+        r = deliver(src)
+        if name == "broken.json":
+            check("broken.json は検査に落ちて 1 で終わる", r.returncode == 1, f"終了コード {r.returncode}")
+            check("broken.json は落ちたとき何も書き出さない", r.stdout == "", "標準出力に中身が出た")
+            check("broken.json の診断が規則idと直し方を持つ",
+                  bool(re.search(r'^\[[a-z-]+/[a-z-]+\] ', r.stderr, re.M)) and "直し方:" in r.stderr,
+                  r.stderr.strip()[:160])
+            continue
+        check(f"{name} が検査を通る", r.returncode == 0, r.stderr.strip()[:200])
+        if r.returncode != 0:
+            continue
+        raw = HEX.findall(r.stdout) + re.findall(r'\brgba?\(', r.stdout)
+        check(f"{name} の出力に生の色が無い", not raw, f"見つかった: {raw}")
+        check(f"{name} の出力に色の presentation attribute が無い",
+              not re.findall(r'\b(?:fill|stroke)="(?!none")', r.stdout),
+              "SVG に色を直接書いている")
+        used = {c for mm in re.finditer(r'class="([^"]+)"', r.stdout) for c in mm.group(1).split()}
+        check(f"{name} の出力が使う class が図の語彙だけ", used <= ALLOWED,
+              f"外にあるもの: {sorted(used - ALLOWED)}")
+        # 通った出力は凍結する。作り直して同じでなければ、どちらかが手で触られている
+        page_path = pathlib.Path(f"figure/examples/{name[:-5]}.html")
+        check(f"{name} の出力 {page_path.name} が repo にある", page_path.exists())
+        if page_path.exists():
+            with tempfile.TemporaryDirectory() as d:
+                fresh = os.path.join(d, "fresh.html")
+                rr = deliver(src, "--as", "page", "--out", fresh)
+                same = rr.returncode == 0 and pathlib.Path(fresh).read_text() == page_path.read_text()
+                check(f"{page_path.name} が作り直しても同じ（凍結）", same,
+                      f"作り直すと変わる。生成物を手で直したか、tokens.css / document.css を触った。"
+                      f"直すなら node figure/deliver.mjs {src} --as page --out {page_path}")
 
 print()
 if fail:
