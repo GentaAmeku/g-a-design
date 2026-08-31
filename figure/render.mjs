@@ -89,6 +89,17 @@ const trimTo = (label, cap) => {
   return kept;
 };
 
+/*
+ * 改行と制御文字。ラベルは1行に置くので、入っていると版付けが崩れる。
+ * C0(0x00〜0x1f)・DEL(0x7f)・C1(0x80〜0x9f)を落とす。
+ */
+const CONTROL = /[\u0000-\u001f\u007f-\u009f]/;
+
+/** 制御文字を \uXXXX の形に開く。診断の1行が改行で割れないようにする。 */
+const openControls = (s) =>
+  s.replace(/[\u0000-\u001f\u007f-\u009f]/g,
+            (c) => `\\u${c.codePointAt(0).toString(16).padStart(4, "0")}`);
+
 /* ---------- 検査 ---------- */
 
 const KEYWORDS = new Set([
@@ -223,6 +234,20 @@ export const validate = (input) => {
     (n.fork ?? []).forEach((c, j) => nodes.push({ ...c, at: `/flow/${i}/fork/${j}`, leaf: true }));
   });
 
+  const control = (text, at, what) => {
+    const i = [...text].findIndex((c) => CONTROL.test(c));
+    if (i < 0) return false;
+    const cp = [...text][i].codePointAt(0).toString(16).padStart(4, "0");
+    out.push({
+      rule: "text/control", at, subject: text,
+      message: `${i + 1} 文字目に制御文字 U+${cp.toUpperCase()} がある`,
+      fix: `${what}は1行に収める。改行で分けたいことは figcaption の文へ回す`,
+    });
+    return true;
+  };
+
+  control(input.caption, "/caption", "caption");
+
   if (nodes.length > SPEC.maxNodes) {
     out.push({
       rule: "size/nodes", at: "/flow",
@@ -241,6 +266,7 @@ export const validate = (input) => {
       });
       continue;
     }
+    if (control(n.label, `${n.at}/label`, "ラベル")) continue;
     if (kind === "branch" && n.leaf) {
       out.push({
         rule: "flow/leaf-branch", at: `${n.at}/kind`, subject: n.label,
@@ -271,7 +297,7 @@ export const validate = (input) => {
 
 export const formatDiagnostics = (list) =>
   list.map((d) => {
-    const head = `[${d.rule}] ${d.at || "/"}${d.subject ? ` 「${d.subject}」` : ""} ${d.message}`;
+    const head = `[${d.rule}] ${d.at || "/"}${d.subject ? ` 「${openControls(d.subject)}」` : ""} ${d.message}`;
     return `${head}\n    直し方: ${d.fix}`;
   }).join("\n");
 

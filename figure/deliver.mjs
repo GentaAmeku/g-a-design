@@ -9,7 +9,7 @@
  *
  *   0  出せた
  *   1  入力が検査に落ちた
- *   2  使い方が違う / ファイルが読めない
+ *   2  使い方が違う / ファイルを読めない・書けない
  */
 
 import { readFileSync, writeFileSync } from "node:fs";
@@ -30,11 +30,16 @@ const die = (code, text) => {
 
 const parse = (argv) => {
   const opts = { as: "snippet", out: null, input: null };
+  /* 値を取る指定は、次の語が無いまま終わっていないかをその場で見る。 */
+  const value = (flag, next) => {
+    if (next === undefined || next.startsWith("-")) die(2, `${flag} に値が無い\n\n${USAGE}`);
+    return next;
+  };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--help" || a === "-h") die(0, USAGE);
-    else if (a === "--as") opts.as = argv[++i];
-    else if (a === "--out") opts.out = argv[++i];
+    else if (a === "--as") opts.as = value(a, argv[++i]);
+    else if (a === "--out") opts.out = value(a, argv[++i]);
     else if (a.startsWith("-")) die(2, `知らない指定: ${a}\n\n${USAGE}`);
     else if (opts.input === null) opts.input = a;
     else die(2, `入力は1つだけ: ${opts.input} と ${a}\n\n${USAGE}`);
@@ -61,7 +66,11 @@ if (diagnostics.length) {
 const out = opts.as === "page" ? page(input) : `${snippet(input)}\n`;
 
 if (opts.out) {
-  writeFileSync(opts.out, out);
+  try {
+    writeFileSync(opts.out, out);
+  } catch (e) {
+    die(2, `書き出せない: ${opts.out}\n  ${e.message}`);
+  }
   const { nodes, width, height } = render(input);
   console.log(`${opts.out} へ書いた(${opts.as} / ノード ${nodes} / ${width}×${height}px)`);
 } else {

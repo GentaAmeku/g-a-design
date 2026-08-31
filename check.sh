@@ -160,18 +160,30 @@ check("STYLE-GUIDE に、色だけで区別しない理由が書いてある",
       "二重の手がかり" in guide and "白黒" in guide)
 
 # 10. 図の生成器。STYLE-GUIDE の「図の記法」が、figure/ の実物と合っているか
-import json, subprocess, tempfile, os
+import json, subprocess, tempfile, os, shutil
+
+NODE = shutil.which("node")
+
+class NoNode:
+    """node が無いときの、走らせなかったことを表す結果。"""
+    returncode, stdout, stderr = 127, "", "node が PATH に無い"
+
+def run(args):
+    return subprocess.run(args, capture_output=True, text=True) if NODE else NoNode()
 
 def node(js):
-    return subprocess.run(["node", "-e", js], capture_output=True, text=True)
+    return run([NODE, "-e", js])
 
 def deliver(*args):
-    return subprocess.run(["node", "figure/deliver.mjs", *args], capture_output=True, text=True)
+    return run([NODE, "figure/deliver.mjs", *args])
+
+check("node がある", NODE is not None, "figure/ の生成器を走らせるのに要る")
 
 probe = node('import("./figure/render.mjs").then(m=>console.log(JSON.stringify({'
              'spec:m.SPEC,kinds:m.KINDS,unsupported:m.unsupportedKeywords(),'
              'wide:m.toPx(m.SPEC.capWide),hex:m.toPx(m.SPEC.capHex)})))')
-check("figure/render.mjs が読める", probe.returncode == 0, probe.stderr.strip().splitlines()[-1:] and probe.stderr.strip().splitlines()[-1] or "node が要る")
+check("figure/render.mjs が読める", probe.returncode == 0,
+      (probe.stderr.strip().splitlines() or ["理由が出ていない"])[-1])
 
 if probe.returncode == 0:
     info  = json.loads(probe.stdout)
@@ -264,6 +276,40 @@ if probe.returncode == 0:
             got = "\n".join(l for l in r.stderr.splitlines() if l.startswith("[label/width]") or l.startswith("    直し方:"))
         check("STYLE-GUIDE の診断の例が、実際の出力と同じ", got == written_diag,
               f"実際は:\n{got}")
+
+    # deliver の終了コード。0 でないものを「出せた」と呼ばないための線引き
+    good = "figure/examples/triage.json"
+    with tempfile.TemporaryDirectory() as d:
+        cases = [
+            ("値の無い --out は 2 で終わる（黙って標準出力へ流さない）",
+             [good, "--as", "page", "--out"], 2),
+            ("値の無い --as は 2 で終わる", [good, "--as"], 2),
+            ("書き出せない先は 2 で終わる（検査落ちの 1 と混ぜない）",
+             [good, "--as", "page", "--out", os.path.join(d, "no", "such", "x.html")], 2),
+            ("読めない入力は 2 で終わる", [os.path.join(d, "無い.json")], 2),
+            ("正しい入力は 0 で終わる", [good], 0),
+        ]
+        for name, args, want in cases:
+            r = deliver(*args)
+            check(name, r.returncode == want, f"終了コード {r.returncode}（{want} のはず）")
+        # 値を取り落としたときに、黙って書いたことにしない
+        r = deliver(good, "--as", "page", "--out")
+        check("値の無い --out のとき、中身を標準出力へ出さない", r.stdout == "",
+              "標準出力に中身が出た")
+
+    # 改行と制御文字は版付けを崩すので、検査で落とす
+    with tempfile.TemporaryDirectory() as d:
+        for name, doc in [
+            ("ラベルの改行", {"figure": 1, "caption": "改行の検査",
+                              "flow": [{"label": "あ\nい"}, {"label": "x"}]}),
+            ("caption の改行", {"figure": 1, "caption": "改行\nする",
+                                "flow": [{"label": "x"}]}),
+        ]:
+            src = os.path.join(d, "nl.json")
+            pathlib.Path(src).write_text(json.dumps(doc, ensure_ascii=False))
+            r = deliver(src)
+            check(f"{name}が検査で落ちる", r.returncode == 1 and "[text/control]" in r.stderr,
+                  f"終了コード {r.returncode} / {r.stderr.strip()[:120]}")
 
     # 見本の入力。broken.json は落ちるためにある
     inputs = sorted(p.name for p in pathlib.Path("figure/examples").glob("*.json"))
