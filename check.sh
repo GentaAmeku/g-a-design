@@ -56,7 +56,15 @@ check("見本が使う class が全部 document.css にある",
 check("document.css の class が全部 見本に出ている",
       not (defined - shown), f"見本に無い: {sorted(defined - shown)}")
 
-# 5. 部品12種が見本に全部ある
+# 5. 中身 → 部品の対応表。挙げる class が実在し、部品を1つも取りこぼさないこと
+m = re.search(r'### 中身から部品を引く\n(.*?)\n### ', guide, re.S)
+check("STYLE-GUIDE に中身 → 部品の対応表がある", bool(m))
+if m:
+    mapped = set(re.findall(r'`(?:ol|pre)?\.?(gad-[a-z0-9-]+)', m.group(1)))
+    check("対応表が挙げる class が全部 document.css にある",
+          not (mapped - defined), f"未定義: {sorted(mapped - defined)}")
+
+# 6. 部品12種が見本に全部ある
 PARTS = {"署名行": ["gad-signature", "gad-foot"], "要約": ["gad-summary"], "目次": ["gad-toc"],
          "用語表": ["gad-glossary"], "引用": ["gad-quote"], "コード": ["gad-code"],
          "表": ["gad-table"], "図の枠": ["gad-figure"], "番号の付く並び": ["gad-ordered"],
@@ -64,7 +72,12 @@ PARTS = {"署名行": ["gad-signature", "gad-foot"], "要約": ["gad-summary"], 
 missing = [n for n, cs in PARTS.items() if not all(c in shown for c in cs)]
 check(f"部品{len(PARTS)}種が見本に全部ある", not missing, f"欠け: {missing}")
 
-# 6. STYLE-GUIDE の明暗差が tokens.css の値から計算し直しても一致する
+# 対応表は部品の側を1つも取りこぼさない。片方だけ増えると、そこが裁量に戻る
+if m:
+    uncovered = [n for n, cs in PARTS.items() if not any(c in mapped for c in cs)]
+    check(f"部品{len(PARTS)}種が全部 対応表に出ている", not uncovered, f"欠け: {uncovered}")
+
+# 7. STYLE-GUIDE の明暗差が tokens.css の値から計算し直しても一致する
 def lum(h):
     h = h.lstrip('#')
     f = lambda v: v/12.92 if v <= 0.03928 else ((v+0.055)/1.055)**2.4
@@ -92,7 +105,7 @@ for name, hexv, w, i in rows:
     check(f"{name} の白地への明暗差 {w}", ratio(real, paper) == float(w), f"実測 {ratio(real, paper)}")
     check(f"{name} の沈んだ地への明暗差 {i}", ratio(real, inset) == float(i), f"実測 {ratio(real, inset)}")
 
-# 7. 有彩色2つ。本文中の数字も検算する
+# 8. 有彩色2つ。本文中の数字も検算する
 def prose(pattern, label):
     m = re.search(pattern, guide)
     check(f"STYLE-GUIDE に{label}の記述がある", bool(m))
@@ -117,7 +130,7 @@ if m:
           ratio(token("--gad-ink"), alert) == float(m.group(3)),
           f"実測 {ratio(token('--gad-ink'), alert)}")
 
-# 8. しきい値そのもの
+# 9. しきい値そのもの
 check("文字に使う一番薄い墨が、沈んだ地でも 4.5 以上",
       ratio(token("--gad-ink-quiet"), inset) >= 4.5,
       f"{ratio(token('--gad-ink-quiet'), inset)}")
@@ -127,7 +140,7 @@ check("--gad-alert に載せる墨が 4.5 以上",
       ratio(token("--gad-ink"), token("--gad-alert")) >= 4.5,
       f"{ratio(token('--gad-ink'), token('--gad-alert'))}")
 
-# 9. 図の系列5色。文書へ漏れていないこと、明暗差が STYLE-GUIDE と合うこと
+# 10. 図の系列5色。文書へ漏れていないこと、明暗差が STYLE-GUIDE と合うこと
 figure = pathlib.Path("tokens-figure.css").read_text()
 
 leaked = re.findall(r'var\(--gad-series-\d\)', doc)
@@ -159,7 +172,7 @@ for name, hexv, w, i, k in series:
 check("STYLE-GUIDE に、色だけで区別しない理由が書いてある",
       "二重の手がかり" in guide and "白黒" in guide)
 
-# 10. 図の生成器。STYLE-GUIDE の「図の記法」が、figure/ の実物と合っているか
+# 11. 図の生成器。STYLE-GUIDE の「図の記法」が、figure/ の実物と合っているか
 import json, subprocess, tempfile, os, shutil
 
 NODE = shutil.which("node")
