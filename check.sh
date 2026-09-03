@@ -448,6 +448,105 @@ if m:
     check("@page の高さが tokens.css と同じ",
           f"{m.group(2)}px" == token_raw("--gad-slide-h"), token_raw("--gad-slide-h"))
 
+# 13. 面の切り替え。display を触る規則を、面の側で2つに限る
+def strip_media_print(css):
+    """@media print の中は別の話なので外す。"""
+    i = css.find("@media print")
+    if i < 0:
+        return css
+    depth, j = 0, css.index("{", i)
+    for k in range(j, len(css)):
+        depth += (css[k] == "{") - (css[k] == "}")
+        if depth == 0:
+            return css[:i] + css[k + 1:]
+    return css[:i]
+
+faces = set()
+for m in re.finditer(r'class="([^"]*)"', deck):
+    cs = m.group(1).split()
+    if "gad-slide" in cs:
+        faces |= {c for c in cs if c.startswith("gad-")}
+check("見本のデッキから面の class を読めた", "gad-slide" in faces, f"{sorted(faces)}")
+
+bad = []
+for sel, body in re.findall(r'([^{}]+)\{([^{}]*)\}', strip_media_print(strip_comments(slides))):
+    if not re.search(r'(^|[;\s])display\s*:', body):
+        continue
+    for one in sel.split(","):
+        one = one.strip()
+        # 見るのは主語(いちばん右の複合セレクタ)だけ。面の中の要素の display は自由
+        subject = re.split(r'[\s>+~]+', one)[-1]
+        classes = set(re.findall(r'\.([a-z0-9-]+)', subject))
+        if not (classes & faces):
+            continue
+        if "is-current" in classes or one == ".gad-slide":
+            continue
+        bad.append(one)
+check("面の display を切り替えるのが .gad-slide と .is-current だけ", not bad,
+      f"同じ強さで後から勝つ規則がある: {bad}。display は .is-current の側へ書く")
+
+# 14. 溢れの検査。ここだけブラウザが要る — 版と書体でしか出ないものを測るため
+CHROME = next((c for c in (
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
+    "/Applications/Chromium.app/Contents/MacOS/Chromium") if os.path.exists(c)), None)
+check("Chrome がある", CHROME is not None, "面の溢れを測るのに要る")
+
+if CHROME:
+    r = subprocess.run(["slides/check-slides.sh", "slides/deck-samples.html"],
+                       capture_output=True, text=True)
+    check("見本のデッキが面から溢れていない", r.returncode == 0, r.stderr.strip()[:300])
+
+    for name, args, want in [
+        ("使い方の間違いは 2 で終わる", [], 2),
+        ("読めない入力は 2 で終わる", ["slides/無い.html"], 2),
+        ("入力が2つなら 2 で終わる", ["a.html", "b.html"], 2),
+    ]:
+        rr = subprocess.run(["slides/check-slides.sh", *args], capture_output=True, text=True)
+        check(name, rr.returncode == want, f"終了コード {rr.returncode}（{want} のはず）")
+
+    # STYLE-GUIDE の「面に載る量」を組み直して確かめる。
+    # 上限は収まり、その1つ上は溢れる。どちらかが崩れたら表のほうが古い
+    limits = re.findall(r'^\| (表|本文|番号の付く並び) \| .*?(\d+)(?:行|段落|項目) \|', guide, re.M)
+    check("STYLE-GUIDE に面に載る量の表が3行ある", len(limits) == 3, f"読めた行: {limits}")
+
+    def content(kind, k):
+        if kind == "表":
+            rows = "".join(f"<tr><td>項目 {i}</td><td>値</td><td>短い説明を置く</td></tr>"
+                           for i in range(1, k))
+            return f'<table class="gad-table"><tr><th>何</th><th>値</th><th>なぜ</th></tr>{rows}</table>'
+        if kind == "本文":
+            return "\n".join(
+                f"<p>本文の行 {i}。面にどれだけ入るかを測るための、ふつうの長さの一文を置いている。</p>"
+                for i in range(1, k + 1))
+        return '<ol class="gad-ordered">' + "".join(
+            f"<li>番号の付く項目 {i}</li>" for i in range(1, k + 1)) + "</ol>"
+
+    if len(limits) == 3:
+        head = pathlib.Path("slides/deck-samples.html").read_text().split('<body class="gad-deck">')[0]
+        faces_html, expect = [], []
+        for kind, cap in limits:
+            for k in (int(cap), int(cap) + 1):
+                faces_html.append(
+                    f'<section class="gad-slide"><span class="gad-slide-kicker">測定</span>'
+                    f'<h2>{kind} {k}</h2>{content(kind, k)}'
+                    f'<div class="gad-slide-foot"><span>測定</span><span>{k}</span></div></section>')
+                expect.append(k > int(cap))
+        probe = pathlib.Path("slides/.check-probe.html")
+        probe.write_text(head + '<body class="gad-deck">\n<div class="gad-slides">'
+                         + "".join(faces_html)
+                         + '</div>\n<script src="./deck.js"></script>\n</body>\n</html>\n')
+        try:
+            rr = subprocess.run(["slides/check-slides.sh", str(probe)],
+                                capture_output=True, text=True)
+            spilled = {int(x) for x in re.findall(r'/slide/(\d+)', rr.stderr)}
+            got = [(i + 1) in spilled for i in range(len(expect))]
+            for (kind, cap), fits, over in zip(limits, got[0::2], got[1::2]):
+                check(f"{kind} は {cap} まで面に載る", not fits, "上限として書いた量が溢れる")
+                check(f"{kind} は {int(cap) + 1} で溢れる", over, "上限をもう1つ上げられる")
+        finally:
+            probe.unlink(missing_ok=True)
+
 print()
 if fail:
     print(f"崩れている: {len(fail)} 件")

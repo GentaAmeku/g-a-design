@@ -10,7 +10,7 @@ GentaAmeku の個人デザインシステム。HTML でもスライドでも同�
 | [document.css](document.css) | 長文の部品12種 |
 | [component-samples.html](component-samples.html) | 部品の見本。ブラウザで開く |
 | [figure/](figure/) | 流れの図の生成器。小さな JSON から SVG を出す |
-| [slides/](slides/) | スライドの版。部品は足さず、面と切り替えだけを持つ |
+| [slides/](slides/) | スライドの版。部品は足さず、面と切り替えだけを持つ。面の溢れを測る検査器つき |
 | [profiles/](profiles/) | 顧客ごとの skin |
 | [research/](research/) | 値の裏にある調査。書体は実測で選んである |
 | [check.sh](check.sh) | STYLE-GUIDE.md の主張が実際に成り立つかを確かめる |
@@ -33,7 +33,7 @@ node figure/deliver.mjs 入力.json --as page --out 図.html            # 単体
 
 検査を通らなければ何も書かず、規則id・場所・数値・直し方を持つ診断を出して 1 で終わる。入力の形は [figure/schema.json](figure/schema.json)、記法の根拠は STYLE-GUIDE.md の「図の記法」にある。
 
-値を触ったら `./check.sh` を回す。色・書体・部品の対応が STYLE-GUIDE.md の記述とずれていないか、図の生成器が実際に動くかを見て、崩れていれば 1 で終わる(要るのは python3 と node)。
+値を触ったら `./check.sh` を回す。色・書体・部品の対応が STYLE-GUIDE.md の記述とずれていないか、図の生成器と面の検査器が実際に動くかを見て、崩れていれば 1 で終わる(要るのは python3 と node、面を測る Chrome)。
 
 ## スライド
 
@@ -41,7 +41,10 @@ node figure/deliver.mjs 入力.json --as page --out 図.html            # 単体
 
 ```bash
 open slides/deck-samples.html                    # 面の見本
+slides/check-slides.sh スライド.html              # 面から溢れていないか(0 = 溢れ無し)
 ```
+
+**目視で「収まった」は当てにならない。**下の余白へ食い込んだだけの溢れは画面では気づけないので、組んだら検査器を通す。
 
 組むときは [slides/slides.css](slides/slides.css) と [slides/deck.js](slides/deck.js) を、tokens.css・document.css と一緒に埋め込む。根拠は STYLE-GUIDE.md の「面」にある。
 
