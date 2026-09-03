@@ -77,6 +77,42 @@ if m:
     uncovered = [n for n, cs in PARTS.items() if not any(c in mapped for c in cs)]
     check(f"部品{len(PARTS)}種が全部 対応表に出ている", not uncovered, f"欠け: {uncovered}")
 
+def token_raw(name):
+    m = re.search(rf'^\s*{re.escape(name)}\s*:\s*([^;]+);', tokens, re.M)
+    assert m, f"tokens.css に {name} が無い"
+    return m.group(1).strip()
+
+# 表の幅の予算。書いた数字を tokens.css と document.css から計算し直す
+m = re.search(r'表の文字は (\d+)px、字間 ([\d.]+)em なので \*\*1 字幅 = ([\d.]+)px\*\*。'
+              r'本文幅 (\d+)px は \*\*([\d.]+) 字幅\*\*にあたる。'
+              r'セルの右余白 (\d+)px が列ごとに \*\*([\d.]+) 字幅\*\*', guide)
+check("STYLE-GUIDE に表の幅の予算が書いてある", bool(m))
+if m:
+    size, track, unit, measure, total, pad_px, pad = m.groups()
+    check("表の文字が tokens.css と同じ",
+          f"{size}px" == token_raw("--gad-size-small"), token_raw("--gad-size-small"))
+    check("字間が tokens.css と同じ",
+          f"{track}em" == token_raw("--gad-tracking"), token_raw("--gad-tracking"))
+    check("本文幅が tokens.css と同じ",
+          f"{measure}px" == token_raw("--gad-measure"), token_raw("--gad-measure"))
+    td = re.search(r'\.gad-table td \{[^}]*padding:\s*\S+\s+(\d+)px', doc)
+    check("セルの右余白を document.css から読めた", bool(td))
+    if td:
+        check(f"セルの右余白 {pad_px}px が document.css と同じ",
+              td.group(1) == pad_px, f"実測 {td.group(1)}px")
+    real_unit = int(size) * (1 + float(track))
+    check(f"1 字幅 = {unit}px", round(real_unit, 2) == float(unit), f"実測 {round(real_unit, 2)}")
+    real_total = int(measure) / real_unit
+    check(f"本文幅 = {total} 字幅", round(real_total, 1) == float(total), f"実測 {round(real_total, 1)}")
+    real_pad = int(pad_px) / real_unit
+    check(f"右余白 = {pad} 字幅", round(real_pad, 1) == float(pad), f"実測 {round(real_pad, 1)}")
+
+    cols = re.findall(r'^\| (\d)列 \| ([\d.]+) 字幅 \|$', guide, re.M)
+    check("列数ごとの予算が3行ある", len(cols) == 3, f"読めた行: {len(cols)}")
+    for n, budget in cols:
+        want = round(real_total - real_pad * int(n), 1)
+        check(f"{n}列の予算 {budget} 字幅", want == float(budget), f"実測 {want}")
+
 # 7. STYLE-GUIDE の明暗差が tokens.css の値から計算し直しても一致する
 def lum(h):
     h = h.lstrip('#')
