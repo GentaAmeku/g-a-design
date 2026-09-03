@@ -59,7 +59,7 @@ check("document.css の class が全部 見本に出ている",
 # 5. 部品12種が見本に全部ある
 PARTS = {"署名行": ["gad-signature", "gad-foot"], "要約": ["gad-summary"], "目次": ["gad-toc"],
          "用語表": ["gad-glossary"], "引用": ["gad-quote"], "コード": ["gad-code"],
-         "表": ["gad-table"], "図の枠": ["gad-figure"], "決定": ["gad-decided"],
+         "表": ["gad-table"], "図の枠": ["gad-figure"], "番号の付く並び": ["gad-ordered"],
          "未決": ["gad-open"], "注記": ["gad-note", "gad-alert"], "並置": ["gad-columns"]}
 missing = [n for n, cs in PARTS.items() if not all(c in shown for c in cs)]
 check(f"部品{len(PARTS)}種が見本に全部ある", not missing, f"欠け: {missing}")

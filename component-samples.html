@@ -26,17 +26,24 @@
 
   <div class="gad-summary">
     <div class="gad-label">要約</div>
-    <p>署名行・要約・目次・用語表・引用・コード・表・図の枠・決定・未決・注記・並置。値は <code>tokens.css</code> からしか引かない。</p>
+    <p>署名行・要約・目次・用語表・引用・コード・表・図の枠・番号の付く並び・未決・注記・並置。値は <code>tokens.css</code> からしか引かない。</p>
   </div>
 
   <div class="gad-cols">
     <div class="gad-main">
 
-      <section id="decided">
-        <h2>決定と未決</h2>
-        <ol class="gad-decided">
+      <section id="ordered">
+        <h2>番号の付く並びと未決</h2>
+        <p>決まったことには理由の行を添える。</p>
+        <ol class="gad-ordered">
           <li>1項目に1行の理由を添える。<span class="gad-why">理由がない決定は、読者が後から覆せない。</span></li>
           <li>決定・仮説・未決を同じ節に混ぜない。<span class="gad-why">行ごとに出どころを判断させるのが、設計書の認知負荷そのもの。</span></li>
+        </ol>
+        <p>手順や受入条件は、同じ部品を理由なしで使う。</p>
+        <ol class="gad-ordered">
+          <li>リッチリザルトテストを開く</li>
+          <li>表の URL を貼って「URL をテスト」を押す</li>
+          <li>結果の一覧から「Organization」を開く</li>
         </ol>
         <div class="gad-open">
           <p>未決はここへ。誰がいつ決めるかを添える。</p>

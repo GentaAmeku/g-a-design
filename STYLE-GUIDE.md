@@ -85,7 +85,7 @@ Google Fonts で日本語を持つ family は 68。Display・手書き・単一�
 | コード | `pre.gad-code` | 色は付けない |
 | 表 | `.gad-table` | 短い対応関係。3列まで |
 | 図の枠 | `.gad-figure` | 枠とキャプション。中身は下の3つで描く |
-| 決定 | `ol.gad-decided` | 1項目に1行の理由を添える |
+| 番号の付く並び | `ol.gad-ordered` | 決定・手順・受入条件。理由を添えるときだけ `.gad-why` |
 | 未決 | `.gad-open` | 空でも節を残す |
 | 注記 | `.gad-note` / `.gad-alert` | 補足は無彩色、注意だけ塗る |
 | 並置 | `.gad-columns` | 2つか3つ。4つ以上は表 |

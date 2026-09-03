@@ -414,19 +414,22 @@ table.gad-table {
   fill: var(--gad-mark);
 }
 
-/* ---------- 9. 決定の箱 ---------- */
-/* 「決まったこと」。番号を振り、1項目に1行の理由を添える。 */
+/* ---------- 9. 番号の付く並び ---------- */
+/*
+ * 順序のある並び。決まったこと・手順・受入条件のどれにも使う。
+ * 理由を添えたいときだけ .gad-why を足す。決定に固有の形は持たせない。
+ */
 
-ol.gad-decided {
+ol.gad-ordered {
   margin: 0;
   padding-left: 1.4em;
 }
 
-.gad-decided li {
+.gad-ordered li {
   margin-bottom: var(--gad-gap-line);
 }
 
-.gad-decided li::marker {
+.gad-ordered li::marker {
   color: var(--gad-mark);
 }
 
