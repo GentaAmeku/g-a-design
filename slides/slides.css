@@ -1,0 +1,210 @@
+/*
+ * G.A Design — slides
+ *
+ * スライドの版。
+ *
+ * この層が持つのは版の骨格だけ — 面、面の切り替え、表紙、下端の署名行、横に置く2つ。
+ * 部品は1つも足さない。表・決定・未決・注記・注意・要約・図の枠・引用・コードは
+ * document.css からそのまま載る。色・書体・文字サイズ・余白は tokens.css からしか引かない。
+ *
+ * 面の大きさとその根拠は tokens.css の --gad-slide-w / --gad-slide-h にある。
+ */
+
+body.gad-deck {
+  background: var(--gad-inset);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gad-slides {
+  width: var(--gad-slide-w);
+  height: var(--gad-slide-h);
+  flex: none;
+  transform: scale(var(--gad-slide-scale));
+  transform-origin: center center;
+}
+
+/*
+ * 面の display を切り替えるのは、この規則と .is-current の2つだけ。
+ *
+ * 表紙のように並べ方の違う面を足すときも、display は .is-current の側へ書く。
+ * `.gad-slide-cover { display: flex }` と書くと、詳細度が同じで後ろにある
+ * `.gad-slide { display: none }` に勝ってしまい、表紙が出たまま残る。
+ * 他の面はその下に積まれ、面の高さで切れて見えなくなる。
+ */
+.gad-slide {
+  display: none;
+  width: var(--gad-slide-w);
+  height: var(--gad-slide-h);
+  background: var(--gad-paper);
+  border-radius: var(--gad-radius);
+  padding: var(--gad-gap-section) var(--gad-gap-section)
+    calc(var(--gad-gap-section) + var(--gad-gap-block));
+  position: relative;
+  overflow: hidden;
+}
+
+.gad-slide.is-current {
+  display: block;
+}
+
+.gad-slide-kicker {
+  font-size: var(--gad-size-label);
+  letter-spacing: var(--gad-tracking-label);
+  color: var(--gad-ink-quiet);
+  display: block;
+  margin-bottom: var(--gad-gap-line);
+}
+
+.gad-slide h2 {
+  margin-bottom: var(--gad-gap-block);
+}
+
+.gad-slide p:last-child,
+.gad-slide .gad-table:last-child {
+  margin-bottom: 0;
+}
+
+/* 面の下端に置く署名と枚数。紙面の署名行と同じ役をスライドで担う。 */
+.gad-slide-foot {
+  position: absolute;
+  left: var(--gad-gap-section);
+  right: var(--gad-gap-section);
+  bottom: var(--gad-gap-line);
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--gad-size-label);
+  letter-spacing: var(--gad-tracking-label);
+  color: var(--gad-ink-quiet);
+}
+
+/* 表紙だけ、題名を面の中央に置く。display は下の .is-current が持つ。 */
+.gad-slide-cover {
+  flex-direction: column;
+  justify-content: center;
+}
+
+.gad-slide-cover.is-current {
+  display: flex;
+}
+
+.gad-slide-cover h1 {
+  margin: 0;
+}
+
+/* 横に置く2つ。左右の幅を変えたいときだけ gad-slide-split-wide を足す。 */
+.gad-slide-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--gad-gap-section);
+  align-items: start;
+}
+
+.gad-slide-split-wide {
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+}
+
+.gad-slide-split img {
+  width: 100%;
+  display: block;
+  border: 1px solid var(--gad-hairline);
+  border-radius: var(--gad-radius);
+}
+
+/* 図の生成器の出力を面へ置くときは、枠を消して図だけ見せる。 */
+.gad-slide .gad-figure {
+  margin: 0;
+}
+
+.gad-slide .gad-figure-frame {
+  border: 0;
+  padding: 0;
+}
+
+.gad-slide .gad-figure svg {
+  height: calc(var(--gad-slide-h) / 2);
+  width: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+.gad-slide .gad-summary,
+.gad-slide .gad-alert,
+.gad-slide .gad-note {
+  margin: 0;
+}
+
+.gad-slide .gad-table {
+  font-size: var(--gad-size-fine);
+}
+
+/*
+ * 面の表は地の文ではなく、一目で見る対象。行送りを見出しの側に寄せる。
+ * 本文の 1.95 のままだと、7行の表が面に収まらない。
+ */
+.gad-slide .gad-table th,
+.gad-slide .gad-table td {
+  line-height: var(--gad-leading-head);
+  padding-top: calc(var(--gad-gap-line) / 2);
+  padding-bottom: calc(var(--gad-gap-line) / 2);
+}
+
+.gad-slide .gad-ordered li {
+  margin-bottom: calc(var(--gad-gap-line) / 2);
+}
+
+.gad-slide .gad-ordered li:last-child {
+  margin-bottom: 0;
+}
+
+/* 面の外に出す操作の手がかり。印刷には出さない。 */
+.gad-slide-hint {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 12px;
+  text-align: center;
+  font-size: var(--gad-size-label);
+  letter-spacing: var(--gad-tracking-label);
+  color: var(--gad-ink-quiet);
+}
+
+@media print {
+  /* @page は custom property を読めないので、ここだけ tokens の値を写す。
+     ずれていないかは check.sh が見る。 */
+  @page {
+    size: 960px 540px;
+    margin: 0;
+  }
+
+  body.gad-deck {
+    height: auto;
+    overflow: visible;
+    display: block;
+    background: var(--gad-paper);
+    font-size: var(--gad-size-body);
+  }
+
+  .gad-slides {
+    width: auto;
+    height: auto;
+    transform: none;
+  }
+
+  .gad-slide {
+    display: block;
+    border-radius: 0;
+    break-after: page;
+  }
+
+  .gad-slide-cover {
+    display: flex;
+  }
+
+  .gad-slide-hint {
+    display: none;
+  }
+}

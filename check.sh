@@ -22,6 +22,8 @@ def check(name, ok, detail=""):
 
 tokens = pathlib.Path("tokens.css").read_text()
 doc    = pathlib.Path("document.css").read_text()
+slides = pathlib.Path("slides/slides.css").read_text()
+deck   = pathlib.Path("slides/deck-samples.html").read_text()
 html   = pathlib.Path("component-samples.html").read_text()
 guide  = pathlib.Path("STYLE-GUIDE.md").read_text()
 
@@ -41,11 +43,12 @@ check("見本に生の色が無い", not raw, f"見つかった: {raw}" if raw e
 
 # 3. document.css が引く変数は全部 tokens.css にある
 used     = set(re.findall(r'var\((--gad-[a-z0-9-]+)\)', doc))
+used_all = used | set(re.findall(r'var\((--gad-[a-z0-9-]+)\)', slides))
 declared = set(re.findall(r'^\s*(--gad-[a-z0-9-]+)\s*:', tokens, re.M))
 check("document.css が引く変数が全部 tokens.css にある",
       not (used - declared), f"未定義: {sorted(used - declared)}")
 check("tokens.css に使われていない宣言が無い",
-      not (declared - used), f"未使用: {sorted(declared - used)}")
+      not (declared - used_all), f"未使用: {sorted(declared - used_all)}")
 
 # 4. 見本が使う class は全部 document.css で定義されている（逆も）
 shown   = {c for m in re.finditer(r'class="([^"]+)"', html)
@@ -412,6 +415,38 @@ if probe.returncode == 0:
                 check(f"{page_path.name} が作り直しても同じ（凍結）", same,
                       f"作り直すと変わる。生成物を手で直したか、tokens.css / document.css を触った。"
                       f"直すなら node figure/deliver.mjs {src} --as page --out {page_path}")
+
+# 12. スライドの層。版の骨格だけを持ち、部品を1つも足していないこと
+raw = HEX.findall(strip_comments(slides)) + re.findall(r'\brgba?\(', strip_comments(slides))
+check("slides.css に生の色が無い", not raw, f"見つかった: {raw}")
+
+used_slides = set(re.findall(r'var\((--gad-[a-z0-9-]+)', slides))
+check("slides.css が引く変数が全部 tokens.css にある",
+      not (used_slides - declared), f"未定義: {sorted(used_slides - declared)}")
+
+defined_slides = set(re.findall(r'\.(gad-[a-z0-9-]+)', slides))
+own = {c for c in defined_slides if c.startswith("gad-slide") or c == "gad-deck"}
+borrowed = defined_slides - own
+check("slides.css が部品を1つも足していない",
+      not (borrowed - defined),
+      f"document.css に無い class を定義している: {sorted(borrowed - defined)}")
+
+shown_deck = {c for m in re.finditer(r'class="([^"]+)"', deck)
+                for c in m.group(1).split() if c.startswith("gad-")}
+check("見本のデッキが使う class が全部 定義されている",
+      not (shown_deck - defined - defined_slides),
+      f"未定義: {sorted(shown_deck - defined - defined_slides)}")
+check("slides.css の骨格が全部 見本のデッキに出ている",
+      not (own - shown_deck), f"見本に無い: {sorted(own - shown_deck)}")
+
+# @page は custom property を読めないので、値を写してある。写し間違いを見る
+m = re.search(r'@page \{\s*size:\s*(\d+)px\s+(\d+)px', slides)
+check("slides.css の @page に面の寸法がある", bool(m))
+if m:
+    check("@page の幅が tokens.css と同じ",
+          f"{m.group(1)}px" == token_raw("--gad-slide-w"), token_raw("--gad-slide-w"))
+    check("@page の高さが tokens.css と同じ",
+          f"{m.group(2)}px" == token_raw("--gad-slide-h"), token_raw("--gad-slide-h"))
 
 print()
 if fail:
