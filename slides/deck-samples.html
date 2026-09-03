@@ -27,7 +27,7 @@
     <h2>結論を先に置く面</h2>
     <div class="gad-summary">
       <div class="gad-label">要約</div>
-      <p>面は 960&times;540。本文 18px のまま、1920px の画面で 36px 相当に拡大して投影する。</p>
+      <p>面の大きさも、投影したときの文字の大きさも STYLE-GUIDE.md の「面」が持つ。ここは形だけを見せる。</p>
     </div>
     <p>本文はそのまま置ける。表・決定・注記は document.css からそのまま載るので、スライド用の部品を覚え直す必要はない。</p>
     <div class="gad-slide-foot"><span>G.A DESIGN &nbsp;/&nbsp; 面</span><span>2 / 7</span></div>
@@ -35,7 +35,7 @@
 
   <section class="gad-slide">
     <span class="gad-slide-kicker">面の型 &nbsp;/&nbsp; 表</span>
-    <h2>表は7行まで</h2>
+    <h2>表は見出しを入れて9行まで</h2>
     <table class="gad-table">
       <tr><th>何</th><th>値</th><th>なぜ</th></tr>
       <tr><td>面</td><td>960 &times; 540</td><td>本文 18px のまま投影で読める</td></tr>
@@ -44,6 +44,8 @@
       <tr><td>行の上下</td><td>7px</td><td>同じ理由</td></tr>
       <tr><td>拡大</td><td>min(幅/960, 高さ/540)</td><td>面の周りに余白を残す</td></tr>
       <tr><td>印刷</td><td>1面1ページ</td><td>16:9 の PDF になる</td></tr>
+      <tr><td>溢れの測り方</td><td>中身の外形</td><td>表紙は上下へ等しく溢れる</td></tr>
+      <tr><td>逃げ道</td><td>面を分ける</td><td>置き換える先が面には無い</td></tr>
     </table>
     <div class="gad-slide-foot"><span>G.A DESIGN &nbsp;/&nbsp; 面</span><span>3 / 7</span></div>
   </section>

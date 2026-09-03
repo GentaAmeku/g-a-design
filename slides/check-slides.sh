@@ -51,18 +51,42 @@ if "</body>" not in text:
     sys.exit(1)
 dst.write_text(text.replace("</body>", """
 <script>
+/*
+ * 溢れは、面の内側と中身の外形を突き合わせて測る。
+ *
+ * scrollHeight は使えない。表紙は中身を上下中央に置くので、溢れは上と下へ
+ * 等しく出る。上へ出たぶんは scrollHeight に入らないため、同じ中身でも表紙
+ * だけ半分しか報告されない(実測: ふつうの面 151px に対して表紙 73px)。
+ *
+ * 下端の署名行は絶対配置で面の余白の上に載るので、外形から外す。
+ */
+const spill = (el) => {
+  const box = el.getBoundingClientRect();
+  const cs = getComputedStyle(el);
+  const kids = Array.from(el.children)
+    .filter((c) => getComputedStyle(c).position !== 'absolute')
+    .map((c) => c.getBoundingClientRect());
+  if (!kids.length) return 0;
+  const above = (box.top + parseFloat(cs.paddingTop)) - Math.min(...kids.map((r) => r.top));
+  const below = Math.max(...kids.map((r) => r.bottom)) - (box.bottom - parseFloat(cs.paddingBottom));
+  return Math.round(Math.max(0, above) + Math.max(0, below));
+};
+
 const out = [];
 document.querySelectorAll('.gad-slide').forEach((el, i) => {
   const was = el.classList.contains('is-current');
   el.classList.add('is-current');
-  const over = el.scrollHeight - el.clientHeight;
+  const over = spill(el);
   if (over > 0) {
     const head = el.querySelector('h1, h2');
     const row = el.querySelector('.gad-table tr');
     const unit = row ? row.getBoundingClientRect().height
                      : parseFloat(getComputedStyle(el).lineHeight);
+    const cs = getComputedStyle(el);
+    const inner = Math.round(el.getBoundingClientRect().height
+      - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom));
     out.push({ n: i + 1, title: head ? head.textContent.trim() : '',
-               over, inner: el.clientHeight, content: el.scrollHeight,
+               over, inner, content: inner + over,
                unit: Math.round(unit), kind: row ? '表の行' : '本文の行' });
   }
   if (!was) el.classList.remove('is-current');
@@ -95,7 +119,7 @@ for d in over:
     subject = f" 「{d['title']}」" if d["title"] else ""
     lines = d["over"] / d["unit"]
     print(f"[slide/overflow] /slide/{d['n']}{subject} +{d['over']}px"
-          f"(中身 {d['content']}px / 面の高さ {d['inner']}px)", file=sys.stderr)
+          f"(中身 {d['content']}px / 面の内寸 {d['inner']}px)", file=sys.stderr)
     print(f"    直し方: あと {d['over']}px 縮める。{d['kind']}"
           f"{lines:.1f}行ぶんにあたる。削れないなら面を分ける", file=sys.stderr)
 raise SystemExit(1)

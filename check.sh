@@ -12,7 +12,7 @@ set -uo pipefail
 cd "$(dirname "$0")"
 
 python3 - "$@" <<'PY'
-import re, sys, pathlib
+import math, re, sys, pathlib
 
 fail = []
 def check(name, ok, detail=""):
@@ -487,18 +487,31 @@ check("面の display を切り替えるのが .gad-slide と .is-current だけ
 
 # 投影したときの大きさ。面の周りに残す余白まで掛けた値を書いているか
 deckjs = pathlib.Path("slides/deck.js").read_text()
-m = re.search(r'1920×1080 の画面で ([\d.]+) 倍に広がり、本文 (\d+)px・見出し (\d+)px 相当', guide)
-check("STYLE-GUIDE に投影したときの大きさが書いてある", bool(m))
 mm = re.search(r'\*\s*([\d.]+);', deckjs)
 check("deck.js から面の周りに残す余白を読めた", bool(mm))
-if m and mm:
-    scale, body, head = float(m.group(1)), int(m.group(2)), int(m.group(3))
-    slide_w = int(token_raw("--gad-slide-w").rstrip("px"))
-    real = round(1920 / slide_w * float(mm.group(1)), 2)
-    check(f"1920 の画面での拡大が {scale} 倍", real == scale, f"実測 {real}")
-    for label, tok, want in [("本文", "--gad-size-body", body), ("見出し", "--gad-size-h2", head)]:
-        got = round(int(token_raw(tok).rstrip("px")) * real)
-        check(f"投影したときの{label} {want}px", got == want, f"実測 {got}px")
+slide_w = int(token_raw("--gad-slide-w").rstrip("px"))
+slide_h = int(token_raw("--gad-slide-h").rstrip("px"))
+
+# 書いてある画面ごとに、拡大率と文字の大きさを計算し直す
+screens = re.findall(r'(\d+)×(\d+) の画面で ([\d.]+) 倍に広がり、本文 (\d+)px・見出し (\d+)px 相当'
+                     r'|(\d+)×(\d+) だと ([\d.]+) 倍にしかならず、本文が (\d+)px まで落ちる', guide)
+check("STYLE-GUIDE に投影したときの大きさが2つ書いてある", len(screens) == 2, f"読めた: {len(screens)}")
+if mm:
+    margin = float(mm.group(1))
+    for g in screens:
+        if g[0]:
+            w, h, scale, body, head = int(g[0]), int(g[1]), float(g[2]), int(g[3]), int(g[4])
+            sizes = [("本文", "--gad-size-body", body), ("見出し", "--gad-size-h2", head)]
+        else:
+            w, h, scale, body = int(g[5]), int(g[6]), float(g[7]), int(g[8])
+            sizes = [("本文", "--gad-size-body", body)]
+        # 文字の大きさは丸める前の拡大率から出す。書いてある 1.25 から出すと、
+        # 丸めの誤差が文字サイズへ持ち越されて 1px ずれる
+        exact = min(w / slide_w, h / slide_h) * margin
+        check(f"{w}×{h} での拡大が {scale} 倍", round(exact, 2) == scale, f"実測 {round(exact, 2)}")
+        for label, tok, want in sizes:
+            got = math.floor(int(token_raw(tok).rstrip("px")) * exact + 0.5)
+            check(f"{w}×{h} で投影したときの{label} {want}px", got == want, f"実測 {got}px")
 
 # 14. 溢れの検査。ここだけブラウザが要る — 版と書体でしか出ないものを測るため
 CHROME = next((c for c in (
@@ -520,6 +533,30 @@ if CHROME:
         rr = subprocess.run(["slides/check-slides.sh", *args], capture_output=True, text=True)
         check(name, rr.returncode == want, f"終了コード {rr.returncode}（{want} のはず）")
 
+    # STYLE-GUIDE に載せた診断の例が、検査器が実際に出す文と一字一句同じか
+    m = re.search(r'```\n(\[slide/overflow\] [^\n]*\n {4}直し方: [^\n]*)\n```', guide)
+    check("STYLE-GUIDE に面の診断の例が載っている", bool(m))
+    if m:
+        written = m.group(1)
+        title = re.search(r'「(.+?)」 ', written).group(1)
+        rows = "".join(f"<tr><td>項目 {i}</td><td>値</td><td>短い説明を置く</td></tr>"
+                       for i in range(1, 10))
+        ex = pathlib.Path("slides/.doc-example.html")
+        ex.write_text(
+            pathlib.Path("slides/deck-samples.html").read_text()
+            .split('<body class="gad-deck">')[0]
+            + '<body class="gad-deck"><div class="gad-slides">'
+            + f'<section class="gad-slide"><span class="gad-slide-kicker">測定</span><h2>{title}</h2>'
+            + f'<table class="gad-table"><tr><th>何</th><th>値</th><th>なぜ</th></tr>{rows}</table>'
+            + '<div class="gad-slide-foot"><span>測定</span><span>1</span></div></section>'
+            + '</div></body></html>')
+        try:
+            rr = subprocess.run(["slides/check-slides.sh", str(ex)], capture_output=True, text=True)
+            got = rr.stderr.strip()
+        finally:
+            ex.unlink(missing_ok=True)
+        check("STYLE-GUIDE の面の診断の例が、実際の出力と同じ", got == written, f"実際は:\n{got}")
+
     # STYLE-GUIDE の「面に載る量」を組み直して確かめる。
     # 上限は収まり、その1つ上は溢れる。どちらかが崩れたら表のほうが古い
     limits = re.findall(r'^\| (表|本文|番号の付く並び) \| .*?(\d+)(?:行|段落|項目) \|', guide, re.M)
@@ -538,7 +575,10 @@ if CHROME:
             f"<li>番号の付く項目 {i}</li>" for i in range(1, k + 1)) + "</ol>"
 
     if len(limits) == 3:
-        head = pathlib.Path("slides/deck-samples.html").read_text().split('<body class="gad-deck">')[0]
+        parts = pathlib.Path("slides/deck-samples.html").read_text().split('<body class="gad-deck">')
+        check("見本のデッキから頭を切り出せた", len(parts) == 2,
+              "<body class=\"gad-deck\"> が見つからない。面に載る量を測れない")
+        head = parts[0]
         faces_html, expect = [], []
         for kind, cap in limits:
             for k in (int(cap), int(cap) + 1):

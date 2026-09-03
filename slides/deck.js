@@ -8,10 +8,15 @@ const slides = Array.from(document.querySelectorAll('.gad-slide'));
 const viewport = document.querySelector('.gad-slides');
 let at = 0;
 
+/*
+ * 面の番号は URL に置くが、履歴は積まない。
+ * location.hash へ代入すると面を1つ動かすたびに履歴が1つ増え、戻るボタンが
+ * 面ではなく URL だけを1つ戻す。デッキから出るのに、進めた枚数ぶん戻る羽目になる。
+ */
 const show = (next) => {
   at = Math.min(Math.max(next, 0), slides.length - 1);
   slides.forEach((slide, i) => slide.classList.toggle('is-current', i === at));
-  location.hash = String(at + 1);
+  history.replaceState(null, '', `#${at + 1}`);
 };
 
 /* 0.94 は面の周りに残す余白。 */
@@ -30,7 +35,13 @@ document.addEventListener('keydown', (e) => {
   show(at + step);
 });
 
-document.addEventListener('click', (e) => show(at + (e.clientX < window.innerWidth / 4 ? -1 : 1)));
+/* 文字を選んだときと、link を押したときは面を動かさない。読み手が面を触れなくなるので。 */
+document.addEventListener('click', (e) => {
+  if (e.target instanceof Element && e.target.closest('a')) return;
+  if (window.getSelection().toString()) return;
+  show(at + (e.clientX < window.innerWidth / 4 ? -1 : 1));
+});
 window.addEventListener('resize', fit);
+window.addEventListener('hashchange', () => show(Number(location.hash.slice(1)) - 1 || 0));
 show(Number(location.hash.slice(1)) - 1 || 0);
 fit();
