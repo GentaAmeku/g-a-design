@@ -4,11 +4,11 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] `ol.gad-decided` を `ol.gad-ordered` に改め、`.gad-why` は任意で残す
-- [ ] 説明が「番号の付く並び。理由を添えるときだけ `.gad-why`」になっている
-- [ ] 見本が理由あり・理由なしの両方を見せる
-- [ ] 部品は12種のまま
+- [x] `ol.gad-decided` を `ol.gad-ordered` に改め、`.gad-why` は任意で残す
+- [x] 説明が「番号の付く並び。理由を添えるときだけ `.gad-why`」になっている
+- [x] 見本が理由あり・理由なしの両方を見せる
+- [x] 部品は12種のまま
 
 `検証:` `./check.sh`

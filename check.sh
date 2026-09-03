@@ -485,6 +485,21 @@ for sel, body in re.findall(r'([^{}]+)\{([^{}]*)\}', strip_media_print(strip_com
 check("面の display を切り替えるのが .gad-slide と .is-current だけ", not bad,
       f"同じ強さで後から勝つ規則がある: {bad}。display は .is-current の側へ書く")
 
+# 投影したときの大きさ。面の周りに残す余白まで掛けた値を書いているか
+deckjs = pathlib.Path("slides/deck.js").read_text()
+m = re.search(r'1920×1080 の画面で ([\d.]+) 倍に広がり、本文 (\d+)px・見出し (\d+)px 相当', guide)
+check("STYLE-GUIDE に投影したときの大きさが書いてある", bool(m))
+mm = re.search(r'\*\s*([\d.]+);', deckjs)
+check("deck.js から面の周りに残す余白を読めた", bool(mm))
+if m and mm:
+    scale, body, head = float(m.group(1)), int(m.group(2)), int(m.group(3))
+    slide_w = int(token_raw("--gad-slide-w").rstrip("px"))
+    real = round(1920 / slide_w * float(mm.group(1)), 2)
+    check(f"1920 の画面での拡大が {scale} 倍", real == scale, f"実測 {real}")
+    for label, tok, want in [("本文", "--gad-size-body", body), ("見出し", "--gad-size-h2", head)]:
+        got = round(int(token_raw(tok).rstrip("px")) * real)
+        check(f"投影したときの{label} {want}px", got == want, f"実測 {got}px")
+
 # 14. 溢れの検査。ここだけブラウザが要る — 版と書体でしか出ないものを測るため
 CHROME = next((c for c in (
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
