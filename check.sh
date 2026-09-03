@@ -594,6 +594,8 @@ if CHROME:
         try:
             rr = subprocess.run(["slides/check-slides.sh", str(probe)],
                                 capture_output=True, text=True)
+            check("溢れている面があれば 1 で終わる", rr.returncode == 1,
+                  f"終了コード {rr.returncode}（1 のはず）")
             spilled = {int(x) for x in re.findall(r'/slide/(\d+)', rr.stderr)}
             got = [(i + 1) in spilled for i in range(len(expect))]
             for (kind, cap), fits, over in zip(limits, got[0::2], got[1::2]):
